@@ -301,7 +301,6 @@ Proof
   >> gvs [AllCaseEqs()]
   >> imp_res_tac fix_state_non_incr_thm >> gvs []
   >>~- ([`mapok _ _`],
-        (*Cases_on `result_map' <|c := s.c - 1; t := s.t|> xs`*)
         Cases_on `result_map' (state (s.c - 1) s.t) xs`
         >> gvs [AllCaseEqs()]
         >> imp_res_tac mapok_non_incr_lemma
