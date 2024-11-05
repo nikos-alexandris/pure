@@ -1,8 +1,4 @@
-open HolKernel boolLib bossLib Parse;
-open integerTheory stringTheory alistTheory listTheory rich_listTheory pred_setTheory;
-open pairTheory optionTheory finite_mapTheory arithmeticTheory;
-open BasicProvers;
-open term_tactic monadsyntax sumTheory;
+open HolKernel Parse boolLib bossLib listTheory;
 open thunkLangTheory;
 
 val _ = new_theory "thunkLangRel_primitives";
@@ -155,3 +151,4 @@ Proof
   >> Induct_on `h` >> gvs [with_fst_def, with_snd_def]
 QED
 
+val _ = export_theory()
