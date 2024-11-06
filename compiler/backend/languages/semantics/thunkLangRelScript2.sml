@@ -127,7 +127,7 @@ Proof
 QED
 
 Theorem mapok_add_thm:
-  ∀(s : state) sp q r s'.
+  ∀(s : state) q r s' sp.
     mapok s q = (Ok r, s')
     ⇒ mapok (s + sp) (MAP (with_snd (λs. s + sp)) q)
         = (Ok r, s' + sp)
@@ -140,13 +140,13 @@ QED
 Definition atom_lit_def:
   atom_lit r =
     case r of
-    | Ok (Atom l) => Ok l
-    | Ok _ => Fail
-    | Fail => Fail
-    | OOT => OOT
+    | (Ok (Atom l), s) => (Ok l, s)
+    | (Ok _, s) => (Fail, s)
+    | (Fail, s) => (Fail, s)
+    | (OOT, s) => (OOT, s)
 End
 
-Theorem atom_lit_isok_thm:
+(*Theorem atom_lit_isok_thm:
   ∀x. (isok ∘ atom_lit) x ⇒ isok x
 Proof
   Cases_on `x` >> gvs [atom_lit_def]
@@ -160,6 +160,31 @@ Proof
   Induct_on `l` >> gvs []
   >> rpt strip_tac
   >> qspec_then `FST h` assume_tac atom_lit_isok_thm
+  >> gvs []
+QED*)
+
+Definition result_map'_fix_def:
+  (result_map'_fix s f [] = ([], s)) ∧
+  (result_map'_fix s f (x::xs) =
+    let (r, s') = fix_state s (f s x) in
+    let (rs, s'') = result_map'_fix s' f xs in
+    ((r, s') :: rs, s''))
+End
+
+Theorem result_map'_fix_CONG[defncong]:
+  ∀s s' f f' xs xs'.
+    s = s'
+    ∧ xs = xs'
+    ∧ (∀st x. st.c ≤ s.c ∧ MEM x xs ⇒ f st x = f' st x)
+    ⇒ result_map'_fix s f xs = result_map'_fix s' f' xs'
+Proof
+  Induct_on `xs` >> gvs [result_map'_fix_def]
+  >> rpt strip_tac
+  >> Cases_on `fix_state s' (f' s' h)` >> rw []
+  >> Cases_on `result_map'_fix r f xs` >> rw []
+  >> Cases_on `result_map'_fix r f' xs` >> rw []
+  >> first_x_assum $ qspecl_then [`r`, `f`, `f'`] assume_tac
+  >> imp_res_tac fix_state_non_incr_thm
   >> gvs []
 QED
 
@@ -259,8 +284,7 @@ Definition eval_to'_def:
                    | NONE => (Fail, st'))
               | res => res)
        | AtomOp aop =>
-           let (rs, st') = result_map' st xs in
-           let rs = MAP (with_fst atom_lit) rs in
+           let (rs, st') = result_map'_fix st (λs x. atom_lit (eval_to' s x)) xs in
            (case mapok st rs of
             | (Fail, st') => (Fail, st')
             | (OOT, st') => (OOT, st')
@@ -272,65 +296,87 @@ Definition eval_to'_def:
                       (Ok (Constructor (if b then "True" else "False") []), st')
                   | NONE => (Fail, st')))
        | Cons s =>
-           let (rs, st') = result_map' st xs in
+           let (rs, st') = result_map'_fix st (λs x. eval_to' s x) xs in
            (case mapok st rs of
             | (Fail, st') => (Fail, st')
             | (OOT, st') => (OOT, st')
             | (Ok vs, st') => (Ok (Constructor s vs), st'))))) ∧
   (eval_to' s (Monad mop xs) =
     check_state s (Monad mop xs) (λs.
-      (Ok (Monadic mop xs), s))) ∧
-  (result_map' st [] = ([], st)) ∧
-  (result_map' st (x::xs) =
-    let (r, st') = fix_state st (eval_to' st x) in
-    let (rs, st'') = result_map' st' xs in
-    ((r, st') :: rs, st''))
+      (Ok (Monadic mop xs), s)))
 Termination
-  WF_REL_TAC `inv_image ($< LEX $<)
-                (λx. case x of
-                     | INL (s, e) => (s.c, exp_size e)
-                     | INR (s, es) => (s.c, list_size exp_size es))`
+  WF_REL_TAC `inv_image ($< LEX $<) (λ(s, e). (s.c, exp_size e))`
   >> rw []
   >> gvs []
   >> imp_res_tac fix_state_non_incr_thm
-  >> imp_res_tac (GSYM fix_state_non_incr_thm)
   >> gvs []
 End
 
+Theorem result_map'_fix_non_incr_thm:
+  ∀s f xs rs r.
+    result_map'_fix s f xs = (rs, r)
+    ⇒ r.c ≤ s.c 
+      ∧ (∀st. MEM st (MAP SND rs) ⇒ st.c ≤ s.c)
+Proof
+  Induct_on `xs` >> gvs [result_map'_fix_def]
+  >> rpt strip_tac
+  >> Cases_on `fix_state s (f s h)` >> gvs []
+  >> Cases_on `result_map'_fix r' f xs` >> gvs []
+  >> imp_res_tac fix_state_non_incr_thm
+  >> res_tac
+  >> gvs []
+QED
+
 Theorem eval_to'_non_incr_thm:
-  (∀s e res s'.
-    eval_to' s e = (res, s') ⇒ s'.c ≤ s.c) ∧
-  (∀s xs rs s'.
-    result_map' s xs = (rs, s')
-    ⇒ (s'.c ≤ s.c
-       ∧ (∀st. MEM st (MAP SND rs) ⇒ st.c ≤ s.c)))
+  ∀s e res s'. eval_to' s e = (res, s') ⇒ s'.c ≤ s.c
 Proof
   ho_match_mp_tac eval_to'_ind
   >> rw [eval_to'_def, check_state_def, fuel_def, trace_def]
   >> gvs [AllCaseEqs()]
   >> imp_res_tac fix_state_non_incr_thm >> gvs []
   >>~- ([`mapok _ _`],
-        Cases_on `result_map' (state (s.c - 1) s.t) xs`
+        qmatch_asmsub_abbrev_tac `result_map' st f xs`
+        >> Cases_on `result_map'_fix st f xs` >> gvs []
         >> gvs [AllCaseEqs()]
+        >> unabbrev_all_tac
         >> imp_res_tac mapok_non_incr_lemma
-        >> gvs [MAP_SND_MAP_WITH_FST_thm])
-  >>~- ([`result_map' _ _`],
-        Cases_on `fix_state s (eval_to' s e)` >> gvs []
-        >> Cases_on `result_map' r xs` >> gvs []
-        >> imp_res_tac fix_state_non_incr_thm >> gvs []
-        >> res_tac >> simp [])
+        >> imp_res_tac result_map'_fix_non_incr_thm
+        >> gvs [])
   >> qmatch_asmsub_abbrev_tac `state a b`
   >> rpt (last_x_assum $ qspec_then `state a b` assume_tac
           >> gvs [])
   >> unabbrev_all_tac >> gvs []
 QED
 
+Definition result_map'_def:
+  (result_map' s f [] = ([], s)) ∧
+  (result_map' s f (x::xs) =
+    let (r, s') = f s x in
+    let (rs, s'') = result_map' s' f xs in
+    ((r, s') :: rs, s''))
+End
+
 Theorem fix_state_thm:
-  ∀s e. fix_state s (eval_to' s e) = eval_to' s e
+  (∀s e. fix_state s (eval_to' s e) = eval_to' s e) ∧
+  (∀s xs. result_map'_fix s (λs x. eval_to' s x) xs
+          = result_map' s (λs x. eval_to' s x) xs) ∧
+  (∀s xs. result_map'_fix s (λs x. atom_lit (eval_to' s x)) xs
+          = result_map' s (λs x. atom_lit (eval_to' s x)) xs)
 Proof
-  rpt strip_tac
-  >> Cases_on `eval_to' s e` >> rw [fix_state_def]
-  >> imp_res_tac eval_to'_non_incr_thm >> gvs []
+  rpt conj_tac
+  >- (rpt strip_tac
+      >> Cases_on `eval_to' s e` >> rw [fix_state_def]
+      >> imp_res_tac eval_to'_non_incr_thm >> gvs [])
+  >- (Induct_on `xs` >> gvs [result_map'_def, result_map'_fix_def]
+      >> rpt strip_tac
+      >> Cases_on `eval_to' s h` >> rw [fix_state_def]
+      >> imp_res_tac eval_to'_non_incr_thm >> gvs [])
+  >- (Induct_on `xs` >> gvs [result_map'_def, result_map'_fix_def]
+      >> rpt strip_tac
+      >> Cases_on `atom_lit (eval_to' s h)` >> rw [fix_state_def]
+      >> Cases_on `eval_to' s h`
+      >> gvs [AllCaseEqs(), atom_lit_def]
+      >> imp_res_tac eval_to'_non_incr_thm >> gvs [])
 QED
 
 Theorem eval_to'_def[compute,allow_rebind] =
@@ -339,14 +385,10 @@ Theorem eval_to'_def[compute,allow_rebind] =
 Theorem eval_to'_ind[allow_rebind] =
   REWRITE_RULE [fix_state_thm] eval_to'_ind;
 
-Theorem eval_to'_add_lemma:
-  (∀s e res s' sp.
+Theorem eval_to'_add_thm:
+  ∀s e res s' sp.
     eval_to' s e = (Ok res, s')
-    ⇒ eval_to' (s + sp) e = (Ok res, s' + sp)) ∧
-  (∀s xs rs s' sp.
-    result_map' s xs = (rs, s')
-    ∧ EVERY (isok ∘ FST) rs
-    ⇒ result_map' (s + sp) xs = (MAP (with_snd (λs. s + sp)) rs, s' + sp))
+    ⇒ eval_to' (s + sp) e = (Ok res, s' + sp)
 Proof
   ho_match_mp_tac eval_to'_ind
   >> rw [eval_to'_def, check_state_def, fuel_def, trace_def]
@@ -363,22 +405,42 @@ Proof
         Cases_on `eval_to' s e` >> gvs []
         >> Cases_on `result_map' r xs` >> gvs []
         >> Cases_on `q` >> gvs [with_snd_def])
+
+  >- (
+      Cases_on `result_map' (state (s.c - 1) s.t) (λs x. eval_to' s x) xs`
+      >> gvs []
+      >> Cases_on `result_map' (state (s.c + sp.c − 1) (s.t + sp.t))
+             (λs x. eval_to' s x) xs`
+      >> rw []
+      >> gvs [AllCaseEqs()]
+      >> imp_res_tac mapok_add_thm
+      >> first_x_assum $ qspec_then `sp` assume_tac
+      >> gvs []
+
+      `result_map' (state (s.c - 1) s.t) (λs x. eval_to' s x) xs = (q, r)
+       ⇒ result_map' (state (s.c + sp.c - 1) (s.t + sp.t)) (λs x. eval_to' s x) xs
+         = (MAP (with_snd (λs''. state (s''.c + sp.c) (s''.t + sp.t))) q, r + sp)` by
+        (
+          Induct_on `xs` >> gvs [result_map'_def]
+          rw []
+          >- (
+              Cases_on `eval_to' (state (s.c - 1) s.t) h` >> gvs []
+              >> Cases_on `result_map' r'' (λs x. eval_to' s x) xs` >> gvs []
+              >> Cases_on `eval_to' (state (s.c + sp.c - 1) (s.t + sp.t)) h` >> gvs []
+              >> Cases_on `result_map' r'3' (λs x. eval_to' s x) xs` >> gvs []
+             )
+          >- ()
+        )
+      >> gvs []
+     )
+
+
+
+
   >> qmatch_asmsub_abbrev_tac `state a b`
   >> rpt (first_x_assum $ qspec_then `state a b` assume_tac
           >> gvs [])
   >> unabbrev_all_tac >> gvs []
-QED
-
-Theorem eval_to'_add_thm:
-  (∀s sp e res s'.
-    eval_to' s e = (Ok res, s')
-    ⇒ eval_to' (s + sp) e = (Ok res, s' + sp)) ∧
-  (∀s sp xs rs s'.
-    result_map' s xs = (rs, s')
-    ∧ EVERY (isok ∘ FST) rs
-    ⇒ result_map' (s + sp) xs = (MAP (with_snd (λs. s + sp)) rs, s' + sp))
-Proof
-  rw [eval_to'_add_lemma]
 QED
 
 Theorem eval_to_add_thm:
@@ -389,14 +451,6 @@ Proof
   rpt strip_tac
   >> qspecl_then [`c`, `e`, `c + c'`] assume_tac eval_to_mono
   >> rw []
-QED
-
-Theorem result_map_add_thm:
-  ∀c c' xs rs.
-    result_map (λx. eval_to c x) xs = INR rs
-    ⇒ result_map (λx. eval_to (c + c') x) xs = INR rs
-Proof
-  cheat
 QED
 
 Theorem eval_requiv_lemma:
@@ -504,14 +558,6 @@ Proof
       >> first_x_assum $ qspec_then `c'` assume_tac
       >> imp_res_tac result_map_INR
       >> rw [result_map_INR, map_def])
-QED
-
-Theorem eval_lequiv_lemma:
-  ∀c e v.
-    eval_to c e = INR v
-    ⇒ ∃s s' . eval_to' s e = (Ok v, s')
-Proof
-  cheat
 QED
 
 Type inv = ``:state -> state -> bool``;

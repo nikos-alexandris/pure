@@ -25,7 +25,7 @@ Definition isoot_def[simp]:
   (isoot _ = F)
 End
 
-Definition outok[simp,compute]:
+Definition outok_def[simp,compute]:
   outok (Ok x) = x
 End
 
@@ -149,6 +149,12 @@ Proof
   Induct_on `l` >> gvs []
   >> rw []
   >> Induct_on `h` >> gvs [with_fst_def, with_snd_def]
+QED
+
+Theorem NOT_MEM_EVERY_thm:
+  ∀x l. ¬MEM x l ⇒ EVERY (λy. y ≠ x) l
+Proof
+  cheat
 QED
 
 val _ = export_theory()
