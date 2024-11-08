@@ -154,7 +154,7 @@ QED
 Theorem NOT_MEM_EVERY_thm:
   ∀x l. ¬MEM x l ⇒ EVERY (λy. y ≠ x) l
 Proof
-  cheat
+  Induct_on `l` >> gvs []
 QED
 
 val _ = export_theory()

@@ -1,0 +1,2123 @@
+[
+  {
+    "name": "eval_to_mono",
+    "statement": "∀k env x j.\n    eval_to k env x ≠ INL Diverge ∧\n    k ≤ j ⇒\n      eval_to j env x = eval_to k env x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 308,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_eq_Diverge",
+    "statement": "eval env x = INL Diverge ⇔\n  ∀k. eval_to k env x = INL Diverge",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 452,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_neq_Diverge",
+    "statement": "eval env x = res ∧ res ≠ INL Diverge ⇒\n  ∃k. eval_to k env x = res",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 461,
+    "type": "Theorem"
+  },
+  {
+    "name": "dest_anyThunk_INL",
+    "statement": "dest_anyThunk th1 = INL x ⇒ x = Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 470,
+    "type": "Theorem"
+  },
+  {
+    "name": "op_of_def",
+    "statement": "op_of ((Cons n):cop) = (Cons (explode n)):op ∧\n  op_of (AtomOp m) = AtomOp m",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 37,
+    "type": "Definition"
+  },
+  {
+    "name": "lets_for_def",
+    "statement": "lets_for l cn v [] b = b ∧\n  lets_for l cn v ((n,w)::ws) b =\n    Let NONE (If (Prim (IsEq cn l T) [Var v]) Unit Fail) $\n      Let (SOME w) (Prim (Proj cn n) [Var v]) (lets_for l cn v ws b)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 47,
+    "type": "Definition"
+  },
+  {
+    "name": "Disj_def",
+    "statement": "Disj v [] = False ∧\n  Disj v ((cn,l)::xs) = If (Prim (IsEq cn l T) [Var v]) True (Disj v xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 54,
+    "type": "Definition"
+  },
+  {
+    "name": "rows_of_def",
+    "statement": "rows_of v [] d =\n    (case d of\n     | NONE => Prim (AtomOp Add) []\n     | SOME (alts,e) => If (Disj v alts) e Fail) ∧\n  rows_of v ((cn,vs,b)::rest) d =\n    If (Prim (IsEq cn (LENGTH vs) T) [Var v])\n       (lets_for (LENGTH vs) cn v (MAPi (λi v. (i,v)) vs) b)\n       (rows_of v rest d)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 59,
+    "type": "Definition"
+  },
+  {
+    "name": "exp_of_def",
+    "statement": "exp_of ((Var n):cexp) = (Var (explode n)):envLang$exp ∧\n  exp_of (Prim p xs) = Prim (op_of p) (MAP exp_of xs) ∧\n  exp_of (App x y) = App (exp_of x) (exp_of y) ∧\n  exp_of (Lam v x) = Lam (explode v) (exp_of x) ∧\n  exp_of (Letrec fs x) = Letrec (MAP (λ(n,y). (explode n,exp_of y)) fs) (exp_of x) ∧\n  exp_of (Let v x y) = Let (OPTION_MAP explode v) (exp_of x) (exp_of y) ∧\n  exp_of (If x y z) = If (exp_of x) (exp_of y) (exp_of z) ∧\n  exp_of (Delay x) = Delay (exp_of x) ∧\n  exp_of (Box x) = Box (exp_of x) ∧\n  exp_of (Force x) = Force (exp_of x) ∧\n  exp_of (Case v rs d) = rows_of (explode v)\n                           (MAP (λ(cn,vs,e). (explode cn, MAP explode vs, exp_of e)) rs)\n                           (OPTION_MAP (λ(a,e). (MAP (explode ## I) a, exp_of e)) d) ∧\n  \n  exp_of (Ret x)        = Monad Ret    [exp_of x] ∧\n  exp_of (Raise x)      = Monad Raise  [exp_of x] ∧\n  exp_of (Bind x y)     = Monad Bind   [exp_of x; exp_of y] ∧\n  exp_of (Handle x y)   = Monad Handle [exp_of x; exp_of y] ∧\n  exp_of (Act x)        = Monad Act    [exp_of x] ∧\n  exp_of (Length x)     = Monad Length [exp_of x] ∧\n  exp_of (Alloc x y)    = Monad Alloc  [exp_of x; exp_of y] ∧\n  exp_of (Deref x y)    = Monad Deref  [exp_of x; exp_of y] ∧\n  exp_of (Update x y z) = Monad Update [exp_of x; exp_of y; exp_of z]\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 70,
+    "type": "Definition"
+  },
+  {
+    "name": "Lams_def",
+    "statement": "Lams [] e = e ∧\n  Lams (x::xs) e = Lam x (Lams xs e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 100,
+    "type": "Definition"
+  },
+  {
+    "name": "Apps_def",
+    "statement": "Apps e [] = e ∧\n  Apps e (x::xs) = Apps (App e x) xs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 105,
+    "type": "Definition"
+  },
+  {
+    "name": "mk_rec_env_def",
+    "statement": "mk_rec_env funs env =\n    MAP (λ(fn, _). (fn, Recclosure funs env fn)) funs ++ env",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 122,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Closure_def",
+    "statement": "dest_Closure (Closure s env x) = return (s, env, x) ∧\n  dest_Closure _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 127,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Recclosure_def",
+    "statement": "dest_Recclosure (Recclosure funs env fn) = return (funs, env, fn) ∧\n  dest_Recclosure _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 132,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyClosure_def",
+    "statement": "dest_anyClosure v =\n    dest_Closure v ++\n    do\n      (f, env, n) <- dest_Recclosure v;\n      case ALOOKUP f n of\n        SOME (Lam s x) => return (s, mk_rec_env f env, x)\n      | _ => fail Type_error\n    od",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 137,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Thunk_def",
+    "statement": "dest_Thunk (Thunk x) = return x ∧\n  dest_Thunk _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 148,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyThunk_def",
+    "statement": "dest_anyThunk v =\n    do\n      w <- dest_Thunk v;\n      return (w, [])\n    od ++\n    do\n      (f, env, n) <- dest_Recclosure v;\n      case ALOOKUP f n of\n        SOME (Delay x) => return (INR (env, x), f)\n      | _ => fail Type_error\n    od",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 153,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Constructor_def",
+    "statement": "dest_Constructor (Constructor s vs) = return (s, vs) ∧\n  dest_Constructor _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 167,
+    "type": "Definition"
+  },
+  {
+    "name": "unit_def",
+    "statement": "unit = Constructor \"\" []",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 172,
+    "type": "Definition"
+  },
+  {
+    "name": "freevars_def",
+    "statement": "freevars (Var n) = {n} ∧\n  freevars (Prim op xs) = (BIGUNION (set (MAP freevars xs))) ∧\n  freevars (Monad mop xs) = (BIGUNION (set (MAP freevars xs))) ∧\n  freevars (If x y z)  = freevars x ∪ freevars y ∪ freevars z ∧\n  freevars (App x y) = freevars x ∪ freevars y ∧\n  freevars (Lam s b) = freevars b DIFF {s} ∧\n  freevars (Let NONE x y) = freevars x ∪ freevars y ∧\n  freevars (Let (SOME s) x y) = freevars x ∪ (freevars y DIFF {s}) ∧\n  freevars (Letrec f x) =\n    ((freevars x ∪ BIGUNION (set (MAP (λ(n, x). freevars x) f))) DIFF\n     set (MAP FST f)) ∧\n  freevars (Delay x) = freevars x ∧\n  freevars (Box x) = freevars x ∧\n  freevars (Force x) = freevars x\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 176,
+    "type": "Definition"
+  },
+  {
+    "name": "closed_def",
+    "statement": "closed e ⇔ freevars e = ∅",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 199,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_to_def",
+    "statement": "eval_to k env (Var n) =\n    (case ALOOKUP env n of\n       SOME v => return v\n     | NONE => fail Type_error) ∧\n  eval_to k env (App f x) =\n    (do\n       xv <- eval_to k env x;\n       fv <- eval_to k env f;\n       (s, env, body) <- dest_anyClosure fv;\n       if k = 0 then fail Diverge else eval_to (k - 1) ((s,xv)::env) body\n     od) ∧\n  eval_to k env (Lam s x) = return (Closure s env x) ∧\n  eval_to k env (Let NONE x y) =\n    (if k = 0 then fail Diverge else\n       do\n         eval_to (k - 1) env x;\n         eval_to (k - 1) env y\n       od) ∧\n  eval_to k env (Let (SOME n) x y) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to (k - 1) env x;\n         eval_to (k - 1) ((n,v)::env) y\n       od) ∧\n  eval_to k env (If x y z) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to (k - 1) env x;\n         if v = Constructor \"True\" [] then\n           eval_to (k - 1) env y\n         else if v = Constructor \"False\" [] then\n           eval_to (k - 1) env z\n         else\n           fail Type_error\n       od) ∧\n  eval_to k env (Letrec funs x) =\n    (if k = 0 then fail Diverge else\n       eval_to (k - 1) (mk_rec_env funs env) x) ∧\n  eval_to k env (Delay x) = return (Thunk (INR (env, x))) ∧\n  eval_to k env (Box x) =\n    (do\n       v <- eval_to k env x;\n       return (Thunk (INL v))\n     od) ∧\n  eval_to k env (Force x) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to k env x;\n         (wx, binds) <- dest_anyThunk v;\n         case wx of\n           INL v => return v\n         | INR (env, y) => eval_to (k - 1) (mk_rec_env binds env) y\n       od) ∧\n  eval_to k env (Prim op xs) =\n    (case op of\n       Cons s =>\n           do\n             vs <- result_map (λx. eval_to k env x) xs;\n             return (Constructor s vs)\n           od\n       | If => fail Type_error\n       | Seq => fail Type_error\n       | Proj s i =>\n           do\n             assert (LENGTH xs = 1);\n             v <- if k = 0 then fail Diverge else eval_to (k - 1) env (HD xs);\n             (t, ys) <- dest_Constructor v;\n             assert (t = s ∧ i < LENGTH ys);\n             return (EL i ys)\n           od\n       | IsEq s i a =>\n           do\n             assert (LENGTH xs = 1);\n             v <- if k = 0 then fail Diverge else eval_to (k - 1) env (HD xs);\n             (t, ys) <- dest_Constructor v;\n             assert ((t = s ⇒ i = LENGTH ys) ∧ t ∉ monad_cns);\n             return (Constructor (if t ≠ s then \"False\" else \"True\") [])\n           od\n       | AtomOp aop =>\n           do\n             ys <- result_map (λx. if k = 0 then fail Diverge else\n                                     case eval_to (k - 1) env x of\n                                       INR (Atom l) => return l\n                                     | INL err => fail err\n                                     | _ => fail Type_error) xs;\n             case eval_op aop ys of\n               SOME (INL v) => return (Atom v)\n             | SOME (INR b) =>\n               return (Constructor (if b then \"True\" else \"False\") [])\n             | NONE => fail Type_error\n           od) ∧\n  eval_to k env (Monad mop xs) = return (Monadic env mop xs)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 203,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_def",
+    "statement": "eval env x =\n    case some k. eval_to k env x ≠ INL Diverge of\n      NONE => fail Diverge\n    | SOME k => eval_to k env x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 301,
+    "type": "Definition"
+  },
+  {
+    "name": "cexp_wf_def",
+    "statement": "cexp_wf ((Lam v x):env_cexp$cexp) = cexp_wf x ∧\n  cexp_wf (Force x) = cexp_wf x ∧\n  cexp_wf (Box x) = cexp_wf x ∧\n  cexp_wf (Delay x) = cexp_wf x ∧\n  cexp_wf (Length x) = cexp_wf x ∧\n  cexp_wf (Act x) = cexp_wf x ∧\n  cexp_wf (Ret x) = cexp_wf x ∧\n  cexp_wf (Raise x) = cexp_wf x ∧\n  cexp_wf (If x y z) = (cexp_wf x ∧ cexp_wf y ∧ cexp_wf z) ∧\n  cexp_wf (Let _ x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Bind x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Handle x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Alloc x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Deref x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Update x y z) = (cexp_wf x ∧ cexp_wf y ∧ cexp_wf z) ∧\n  cexp_wf (App x y) = (cexp_wf x ∧ cexp_wf y) ∧\n  cexp_wf (Letrec fs x) =\n    (EVERY I (MAP (λ(_,x). cexp_wf x) fs) ∧ cexp_wf x ∧\n     ALL_DISTINCT (MAP (λx. explode (FST x)) fs) ∧\n     EVERY (λ(_,x). ∃n m. x = Lam n m ∨ x = Delay m) fs) ∧\n  cexp_wf (Case v rs x) =\n    (EVERY I (MAP (λ(_,vs,x). ALL_DISTINCT vs ∧ cexp_wf x) rs) ∧ rs ≠ [] ∧\n     OPTION_ALL (λ(a,x). cexp_wf x ∧\n          DISJOINT (set (MAP (explode o FST) a)) monad_cns ∧\n          a ≠ []) x ∧\n     DISJOINT (set (MAP (explode o FST) rs)) monad_cns ∧\n     ALL_DISTINCT (MAP FST rs ++ case x of NONE => [] | SOME (a,_) => MAP FST a) ∧\n     ~MEM v (FLAT (MAP (FST o SND) rs))) ∧\n  cexp_wf (Prim p xs) =\n    (EVERY cexp_wf xs ∧\n     (case p of\n      | Cons m => T\n      | AtomOp b => (∀m. b = Message m ⇒ LENGTH xs = 1 ∧ m ≠ \"\") ∧\n                    num_atomop_args_ok b (LENGTH xs) ∧\n                    (∀s1 s2. b ≠ Lit (Msg s1 s2)) ∧ (∀l. b ≠ Lit (Loc l)))) ∧\n  cexp_wf _ = T\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/envLangScript.sml",
+    "line": 481,
+    "type": "Definition"
+  },
+  {
+    "name": "interp_def",
+    "statement": "interp sv stack state =\n    case next_action sv stack state of\n    | Ret => Ret pure_semantics$Termination\n    | Div => Div\n    | Err => Ret pure_semantics$Error\n    | Act a new_stack new_state =>\n        Vis a (λs. case s of\n          | INL x =>\n              Ret $ pure_semantics$FinalFFI a x\n          | INR y =>\n              if STRLEN y ≤ max_FFI_return_size then\n                interp (INR $ Monadic [(\"v\",Atom $ Str y)] Ret [Var \"v\"])\n                  new_stack new_state\n              else Ret $ pure_semantics$FinalFFI a pure_semantics$FFI_failure)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 203,
+    "type": "Theorem"
+  },
+  {
+    "name": "next_less_eq",
+    "statement": "∀n e k st m.\n    next n e k st ≠ Div ∧\n    n ≤ m\n  ⇒ next n e k st = next m e k st",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 237,
+    "type": "Theorem"
+  },
+  {
+    "name": "next_next",
+    "statement": "next n e k st ≠ Div ∧ next m e k st ≠ Div ⇒\n  next n e k st = next m e k st",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 288,
+    "type": "Theorem"
+  },
+  {
+    "name": "get_atoms_def",
+    "statement": "get_atoms [] = SOME [] ∧\n  get_atoms (Atom a :: xs) = OPTION_MAP (λas. a::as) (get_atoms xs) ∧\n  get_atoms _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 28,
+    "type": "Definition"
+  },
+  {
+    "name": "with_atoms_def",
+    "statement": "with_atoms env vs f =\n    case result_map (eval env) vs of\n    | INL Diverge => Div\n    | INL Type_error => Err\n    | INR ws =>\n      case get_atoms ws of\n      | SOME as => f as\n      | NONE => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 34,
+    "type": "Definition"
+  },
+  {
+    "name": "with_value_def",
+    "statement": "with_value e f =\n    case UNCURRY eval e of\n    | INR v => f v\n    | INL Diverge => Div\n    | INL _ => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 45,
+    "type": "Definition"
+  },
+  {
+    "name": "apply_closure_def",
+    "statement": "apply_closure f arg cont =\n    with_value f (λv.\n      case dest_anyClosure v of\n      | INR (x, env, body) =>\n          cont (eval ((x, arg)::env) body)\n      | INL _ => Err)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 53,
+    "type": "Definition"
+  },
+  {
+    "name": "next_def",
+    "statement": "next (k:num) sv stack (state:state) =\n    case sv of\n    | INL Diverge => Div\n    | INL _ => Err\n    | INR v =>\n      case v of\n      | Monadic env mop vs => (\n          if mop = Ret ∧ LENGTH vs = 1 then\n            with_value (env, HD vs) (λv.\n              case stack of\n              | Done => Ret\n              | BC f fs =>\n                  if k = 0 then Div else\n                    apply_closure f v (λw. next (k-1) w fs state)\n              | HC f fs => if k = 0 then Div else next (k-1) sv fs state)\n          else if mop = Raise ∧ LENGTH vs = 1 then\n            with_value (env, HD vs) (λv.\n              case stack of\n              | Done => Ret\n              | BC f fs => if k = 0 then Div else next (k-1) sv fs state\n              | HC f fs =>\n                  if k = 0 then Div else\n                    apply_closure f v (λw. next (k-1) w fs state))\n          else if mop = Bind ∧ LENGTH vs = 2 then\n            (let m = EL 0 vs in\n             let f = EL 1 vs in\n               if k = 0 then Div\n               else next (k-1) (eval env m) (BC (env,f) stack) state)\n          else if mop = Handle ∧ LENGTH vs = 2 then\n            (let m = EL 0 vs in\n             let f = EL 1 vs in\n               if k = 0 then Div\n               else next (k-1) (eval env m) (HC (env,f) stack) state)\n          else if mop = Act ∧ LENGTH vs = 1 then\n            (with_atoms env vs (λas.\n               case HD as of\n               | Msg channel content => Act (channel, content) stack state\n               | _ => Err))\n          else if mop = Alloc ∧ LENGTH vs = 2 then\n            (case result_map (eval env) vs of\n             | INR [vl; v] =>\n                (case get_atoms [vl] of\n                 | SOME [Int len] =>\n                    let n = if len < 0 then 0 else Num len in\n                    let new_state = state ++ [REPLICATE n v] in\n                    if k = 0 then Div else\n                      next (k-1)\n                        (INR $ RetExp $ Lit $ Loc (LENGTH state))\n                        stack new_state\n                 | _ => Err)\n             | INL Diverge => Div\n             | _ => Err)\n          else if mop = Length ∧ LENGTH vs = 1 then\n            (with_atoms env vs (λas.\n               case HD as of\n               | Loc n =>\n                   (if LENGTH state ≤ n then Err else\n                    if k = 0 then Div else\n                      next (k-1)\n                        (INR $ RetExp $ Lit $ Int (& (LENGTH (EL n state))))\n                        stack state)\n               | _ => Err))\n          else if mop = Deref ∧ LENGTH vs = 2 then\n            (with_atoms env vs (λas.\n               case (EL 0 as, EL 1 as) of\n               | (Loc n, Int i) =>\n                   (if LENGTH state ≤ n then Err else\n                    if k = 0 then Div else\n                    if 0 ≤ i ∧ i < & LENGTH (EL n state) then\n                      next (k-1)\n                        (INR $ RetVal $ EL (Num i) (EL n state))\n                        stack state\n                    else\n                      next (k-1)\n                        (INR $ RaiseExp $ Prim (Cons \"Subscript\") [])\n                        stack state)\n               | _ => Err))\n          else if mop = Update ∧ LENGTH vs = 3 then\n            (case result_map (eval env) vs of\n             | INR [vl; vi; v] =>\n                 (case get_atoms [vl; vi] of\n                  | SOME [Loc n; Int i] =>\n                      if LENGTH state ≤ n then Err else\n                      if k = 0 then Div else\n                      if 0 ≤ i ∧ i < & LENGTH (EL n state) then\n                        let new_state =\n                          LUPDATE (LUPDATE v (Num i) (EL n state)) n state\n                        in next (k-1)\n                            (INR $ RetExp $ Prim (Cons \"\") [])\n                            stack new_state\n                      else\n                        next (k-1)\n                          (INR $ RaiseExp $ Prim (Cons \"Subscript\") [])\n                          stack state\n                  | _ => Err)\n             | INL Diverge => Div\n             | _ => Err)\n          else Err)\n      | _ => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 71,
+    "type": "Definition"
+  },
+  {
+    "name": "next_action_def",
+    "statement": "next_action sv stack state =\n    case some k. next k sv stack state ≠ Div of\n    | NONE => Div\n    | SOME k => next k sv stack state",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 173,
+    "type": "Definition"
+  },
+  {
+    "name": "interp'_def",
+    "statement": "interp' =\n    itree_unfold_err\n      (λ(sv,stack,state).\n        case next_action sv stack state of\n        | Ret => Ret' pure_semantics$",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 180,
+    "type": "Definition"
+  },
+  {
+    "name": "interp",
+    "statement": "interp sv stack state = interp' (sv, stack, state)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 199,
+    "type": "Definition"
+  },
+  {
+    "name": "semantics_def",
+    "statement": "semantics e env stack state = interp (eval env e) stack state",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 226,
+    "type": "Definition"
+  },
+  {
+    "name": "itree_of_def",
+    "statement": "itree_of e = semantics e [] Done []",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/env_semanticsScript.sml",
+    "line": 230,
+    "type": "Definition"
+  },
+  {
+    "name": "allvars_Lams",
+    "statement": "∀vs x. allvars (Lams vs x) = set vs UNION allvars x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 128,
+    "type": "Theorem"
+  },
+  {
+    "name": "allvars_Apps",
+    "statement": "∀xs x. allvars (Apps x xs) = BIGUNION (set (MAP allvars xs)) UNION allvars x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 134,
+    "type": "Theorem"
+  },
+  {
+    "name": "allvars_IfDisj",
+    "statement": "allvars (IfDisj v a e) = if a = [] then allvars e else explode v INSERT allvars e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 140,
+    "type": "Theorem"
+  },
+  {
+    "name": "allvars_lets_for",
+    "statement": "allvars (lets_for cn v ws b) =\n    (if ws = [] then {} else {v}) ∪ set (MAP SND ws) ∪ allvars b",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 149,
+    "type": "Theorem"
+  },
+  {
+    "name": "allvars_rows_of",
+    "statement": "allvars (rows_of v k css) =\n    (if css = [] then {} else {v}) ∪\n    allvars k ∪\n    BIGUNION (set (MAP (λ(cn,vs,b). set vs ∪ allvars b) css))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 157,
+    "type": "Theorem"
+  },
+  {
+    "name": "allvars_of",
+    "statement": "∀x. NestedCase_free x ∧ cexp_wf x ⇒ allvars_of x = allvars (exp_of x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 169,
+    "type": "Theorem"
+  },
+  {
+    "name": "Apps_append",
+    "statement": "∀xs ys x. Apps x (xs ++ ys) = Apps (Apps x xs) ys",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 201,
+    "type": "Theorem"
+  },
+  {
+    "name": "exp_of_SmartLam",
+    "statement": "exp_of (SmartLam a vs x) = exp_of (Lam a vs x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 207,
+    "type": "Theorem"
+  },
+  {
+    "name": "exp_of_SmartApp",
+    "statement": "exp_of (SmartApp a x xs) = exp_of (App a x xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 217,
+    "type": "Theorem"
+  },
+  {
+    "name": "Disj_def",
+    "statement": "Disj v [] = False ∧\n  Disj v ((cn,l)::xs) = If (IsEq cn l T (Var v)) True (Disj v xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 12,
+    "type": "Definition"
+  },
+  {
+    "name": "lets_for_def",
+    "statement": "lets_for cn v [] b = b ∧\n  lets_for cn v ((n,w)::ws) b = Let w (Proj cn n (Var v)) (lets_for cn v ws b)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 17,
+    "type": "Definition"
+  },
+  {
+    "name": "rows_of_def",
+    "statement": "rows_of v k [] = k ∧\n  rows_of v k ((cn,vs,b)::rest) =\n    If (IsEq cn (LENGTH vs) T (Var v))\n      (lets_for cn v (MAPi (λi v. (i,v)) vs) b) (rows_of v k rest)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 22,
+    "type": "Definition"
+  },
+  {
+    "name": "patguards_def",
+    "statement": "patguards [] = (Prim (Cons \"True\") [], []) ∧\n  patguards (ep::eps) =\n  case ep of\n  | (e, cepatVar v) => (I ## CONS (v,e)) (patguards eps)\n  | (e, cepatUScore) => patguards eps\n  | (e, cepatCons cnm ps) =>\n      let\n        cnml = explode cnm ;\n        (gd, binds) = patguards (MAPi (λi p. (Proj cnml i e, p)) ps ++ eps) ;\n      in\n        (If (IsEq cnml (LENGTH ps) T e) gd (Prim (Cons \"False\") []),\n         binds)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 29,
+    "type": "Definition"
+  },
+  {
+    "name": "nested_rows_def",
+    "statement": "nested_rows v [] = Fail ∧\n  nested_rows v (pe :: pes) =\n  let (gd, binds) = patguards [(v,FST pe)]\n  in\n    If gd\n       (FOLDR (λ(u,e) A. Let (explode u) e A) (SND pe) binds)\n       (nested_rows v pes)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 48,
+    "type": "Definition"
+  },
+  {
+    "name": "IfDisj_def",
+    "statement": "IfDisj v a e =\n    If (Disj (explode v) (MAP (explode ## I) a)) e Fail",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 58,
+    "type": "Definition"
+  },
+  {
+    "name": "exp_of_def",
+    "statement": "exp_of (Var d n)       = Var (explode n):exp ∧\n  exp_of (Prim d p xs)   = Prim (op_of p) (MAP exp_of xs) ∧\n  exp_of (Let d v x y)   = Let (explode v) (exp_of x) (exp_of y) ∧\n  exp_of (App _ f xs)    = Apps (exp_of f) (MAP exp_of xs) ∧\n  exp_of (Lam d vs x)    = Lams (MAP explode vs) (exp_of x) ∧\n  exp_of (Letrec d rs x) =\n    Letrec (MAP (λ(n,x). (explode n,exp_of x)) rs) (exp_of x) ∧\n  exp_of (Case d x v rs eopt) =\n    (let\n       k = (case eopt of\n            | NONE => Fail\n            | SOME (a,e) => IfDisj v a (exp_of e)) ;\n       caseexp =\n       Let (explode v) (exp_of x)\n           (rows_of (explode v) k\n            (MAP (λ(c,vs,x). (explode c,MAP explode vs,exp_of x)) rs))\n     in if MEM v (FLAT (MAP (FST o SND) rs)) then\n       Seq Fail caseexp\n     else\n       caseexp) ∧\n  exp_of (NestedCase d g gv p e pes) =\n  Let (explode gv) (exp_of g)\n      (nested_rows (Var (explode gv))\n       (MAP (λ(p,e). (p, exp_of e)) ((p,e)::pes)))\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 63,
+    "type": "Definition"
+  },
+  {
+    "name": "allvars_of_def",
+    "statement": "allvars_of (pure_cexp$Var c v) =\n    {explode v} ∧\n  allvars_of (Lam c ns x) =\n    set (MAP explode ns) UNION allvars_of x ∧\n  allvars_of (Letrec c xs y) =\n    set (MAP (explode o FST) xs) UNION\n    BIGUNION (set (MAP (allvars_of o SND) xs)) UNION\n    allvars_of y ∧\n  allvars_of (Prim c p xs) =\n    BIGUNION (set (MAP allvars_of xs)) ∧\n  allvars_of (App c x ys) =\n    allvars_of x UNION\n    BIGUNION (set (MAP allvars_of ys)) ∧\n  allvars_of (Let c n x y) =\n    {explode n} UNION allvars_of x UNION allvars_of y ∧\n  allvars_of (Case c x n ys eopt) =\n    {explode n} UNION\n    BIGUNION (set (MAP (set o MAP explode o FST o SND) ys)) UNION\n    BIGUNION (set (MAP (allvars_of o SND o SND) ys)) UNION\n    allvars_of x UNION\n      (case eopt of\n       | NONE => {}\n       | SOME (a,e) => allvars_of e) ∧\n  allvars_of (NestedCase c g gv p e pes) =\n    {explode gv} UNION\n    BIGUNION (set (MAP (allvars_of o SND) pes)) UNION\n    allvars_of e UNION allvars_of g\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/pureLangScript.sml",
+    "line": 96,
+    "type": "Definition"
+  },
+  {
+    "name": "sinterp",
+    "statement": "sinterp sr st k =\n    case step_until_halt (sr,st,k) of\n    | Ret => Ret Termination\n    | Err => Ret Error\n    | Div => Div\n    | Act e k' st' =>\n        Vis e (λa. case a of\n                   | INL x => Ret $ FinalFFI e x\n                   | INR y =>\n                      if LENGTH y ≤ max_FFI_return_size then\n                        sinterp (Val $ Atom $ Str y) st' k'\n                      else Ret $ FinalFFI e FFI_failure)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 495,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_add",
+    "statement": "step_n (m+n) x = step_n m (step_n n x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 513,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_SUC",
+    "statement": "step_n (SUC n) x = step_n n (step_n 1 x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 520,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_alt",
+    "statement": "step_n 0 res = res ∧\n  step_n (SUC n) res = (λ(sr,st,k). step st k sr) (step_n n res)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 526,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_step_same",
+    "statement": "∀sr st k. is_halt (sr, st, k) ⇒ step st k sr = (sr, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 534,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_mono",
+    "statement": "∀n res. is_halt (step_n n res) ⇒ ∀m. n < m ⇒ step_n n res = step_n m res",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 542,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_imp_eq",
+    "statement": "is_halt (step_n n res) ∧ is_halt (step_n m res) ⇒\n  step_n n res = step_n m res",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 551,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_0",
+    "statement": "step_n 0 x = x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 559,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_1",
+    "statement": "step_n 1 x = step (FST (SND x)) (SND (SND x)) (FST x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 565,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_step_n_same",
+    "statement": "∀n x. is_halt x ⇒ step_n n x = x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 571,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_unfold",
+    "statement": "(∃n. k = n + 1 ∧ step_n n (step st c sr) = res) ⇒\n  step_n k (sr,st,c) = res",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 577,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_unitl_halt_unwind",
+    "statement": "step ss1 sk1 r1 = (r1',ss1',sk1') ⇒\n  step_until_halt (r1,ss1,sk1) =\n  step_until_halt (r1',ss1',sk1')",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 588,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_step",
+    "statement": "∀n x. is_halt x ⇒ step_n n x = x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 617,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_simp",
+    "statement": "(is_halt (Exn v,s,k) ⇔ k = []) ∧\n  (is_halt (Val v,s,k) ⇔ k = [])",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 626,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_Error",
+    "statement": "∀n ts tk tr1 ts1 tk1.\n    tr1 ≠ Error ⇒ step_n n (Error,ts,tk) ≠ (tr1,ts1,tk1)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 633,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_Exn_NIL",
+    "statement": "step_n n (Exn v,s,[]) = (Exn v,s,[])",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 640,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_is_halt_SOME",
+    "statement": "step_n x (tr,SOME ts,tk) = (Action a b,a1,a2) ⇒\n  ∃ts2. a1 = SOME ts2",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 655,
+    "type": "Theorem"
+  },
+  {
+    "name": "application_cut_cont",
+    "statement": "∀sop vs st k x y z k'.\n  application sop vs st k = (x,y,z) ∧ num_args_ok sop (LENGTH vs) ∧ k' ≼ k ⇒\n  ∃x' y' z'. application sop vs st k' = (x',y',z') ∧\n       ((x,y,z) = (x',y',z' ++ DROP (LENGTH k') k) ∨ is_halt (x',y',z'))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 680,
+    "type": "Theorem"
+  },
+  {
+    "name": "return_cut_cont",
+    "statement": "∀v st k x y z k'.\n  return v st k = (x,y,z) ∧ k' ≼ k ⇒\n  ∃x' y' z'. return v st k' = (x',y',z') ∧\n       ((x,y,z) = (x',y',z' ++ DROP (LENGTH k') k) ∨ is_halt (x',y',z'))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 693,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_cut_cont",
+    "statement": "∀st k sr k' x y z.\n  step st k sr = (x,y,z) ∧ k' ≼ k ⇒\n  ∃x' y' z'. step st k' sr = (x',y',z') ∧\n       ((x,y,z) = (x',y',z' ++ DROP (LENGTH k') k) ∨ is_halt (x',y',z'))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 709,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_cut_cont_gen",
+    "statement": "∀n x s k y k'.\n  step_n n (x,s,k) = y ∧ is_halt y ∧ k' ≼ k ⇒\n  ∃m z. m ≤ n ∧ step_n m (x,s,k') = z ∧ is_halt z",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 726,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_cut_cont",
+    "statement": "step_n n (x,s,k) = y ∧ is_halt y ⇒\n  ∃m z. m ≤ n ∧ step_n m (x,s,[]) = z ∧ is_halt z",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 742,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_Error",
+    "statement": "step_n n (Error,ts,tk) = (Error,ts,tk)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 749,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_Val",
+    "statement": "step_n n (Val v,ts,[]) = (Val v,ts,[])",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 755,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_Action",
+    "statement": "step_n n (Action a b, s, k) = (Action a b, s, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 761,
+    "type": "Theorem"
+  },
+  {
+    "name": "application_NONE",
+    "statement": "application Alloc [v1;v2] NONE s = (Error,NONE,s) ∧\n  application Ref vs NONE s = (Error,NONE,s) ∧\n  application Length [v1] NONE s = (Error,NONE,s) ∧\n  application Sub [v1;v2] NONE s = (Error,NONE,s) ∧\n  application UnsafeSub [v1;v2] NONE s = (Error,NONE,s) ∧\n  application Update [v1;v2;v3] NONE s = (Error,NONE,s) ∧\n  application UnsafeUpdate [v1;v2;v3] NONE s = (Error,NONE,s) ∧\n  application (FFI f) [v1] NONE s = (Error,NONE,s)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 772,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_NONE",
+    "statement": "step_n n (Exp tenv1 te,ts,[]) = (tr1,ts1,tk1) ∧ is_halt (tr1,ts1,tk1) ⇒\n  step_n n (Exp tenv1 te,NONE,[]) = (tr1,NONE,tk1) ∧ (∃res. tr1 = Val res) ∨\n  ∀k. ∃ts2 tk2. step_n n (Exp tenv1 te,NONE,k) = (Error,ts2,tk2)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 786,
+    "type": "Theorem"
+  },
+  {
+    "name": "application_set_cont",
+    "statement": "∀sop vs st k' sr k x y z.\n  application sop vs st k' = (x,y,z) ∧ x ≠ Error ∧ (∀v. x = Exn v ⇒ z ≠ []) ⇒ k' ≼ k ⇒\n  application sop vs st k = (x,y,z ++ DROP (LENGTH k') k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1034,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_pres_cons_NIL",
+    "statement": "step ts [] (Exp l e) = (res,ts1,[]) ⇒\n  step ts k (Exp l e) = (res,ts1,k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1045,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_inc_cont",
+    "statement": "step ts (k0::k1) te = (x0,x1,k2) ∧ LENGTH k1 + 1 < LENGTH k2 ⇒\n  ∃k. k2 = k::k0::k1 ∧ ∀k3. step ts (k0::k3) te = (x0,x1,k::k0::k3)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1057,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_inc_nil",
+    "statement": "step ts [] te = (x0,x1,h::t) ∧ ¬is_halt (te,ts,[]:cont list) ⇒\n  t = [] ∧ ∀k. step ts k te = (x0,x1,h::k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1080,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_dec_cont",
+    "statement": "step ts k1 te = (x0,x1,k2) ∧ LENGTH k2 < LENGTH k1 ⇒\n  ∃k. k1 = k::k2 ∧ ∀k3. step ts (k::k3) te = (x0,x1,k3)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1091,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_eq_cont",
+    "statement": "step ts (k::k1) te = (x0,x1,x2) ∧ LENGTH x2 = LENGTH (k::k1) ⇒\n  ∃d. x2 = d::k1 ∧ ∀k3. step ts (k::k3) te = (x0,x1,d::k3)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1121,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_cont_swap",
+    "statement": "∀n te ts k k1 res ts1 k2.\n    step_n n (te,ts,k::k1) = (res,ts1,k2) ∧ LENGTH k1 = LENGTH k2 ∧\n    (∀m res ts1 k0.\n       m < n ∧ step_n m (te,ts,k::k1) = (res,ts1,k0) ⇒ LENGTH k1 < LENGTH k0) ⇒\n    ∀k3. k2 = k1 ∧ step_n n (te,ts,k::k3) = (res,ts1,k3)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1208,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_set_cont",
+    "statement": "step_n n (Exp tenv1 te,ts,[]) = (Val res,ts1,[]) ⇒\n  ∃n5. n5 ≤ n ∧ ∀k. step_n n5 (Exp tenv1 te,ts,k) = (Val res,ts1,k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1269,
+    "type": "Theorem"
+  },
+  {
+    "name": "return_fast_forward_lemma",
+    "statement": "∀v st k' sr k x y z.\n  return v st k' = (x,y,z) ∧ (is_halt (x,y,z) ⇒ ∃v. x = Val v) ∧ k' ≼ k ⇒\n  return v st k = (x,y,z ++ DROP (LENGTH k') k) ∨\n  ((st,k',Val v) = (y,z,x))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1322,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_fast_forward_lemma",
+    "statement": "∀s k' sr k x y z.\n  step s k' sr = (x,y,z) ∧ (is_halt (x,y,z) ⇒ ∃v. x = Val v) ∧ k' ≼ k ⇒\n  step s k sr = (x,y,z ++ DROP (LENGTH k') k) ∨\n  ((s,k',sr) = (y,z,x))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1341,
+    "type": "Theorem"
+  },
+  {
+    "name": "is_halt_prefix",
+    "statement": "∀sr k s k'. is_halt (sr,s,k) ∧ k' ≼ k ⇒ is_halt (sr,s,k')",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1362,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_fast_forward_gen",
+    "statement": "∀m2 sr ss k' ss2 sk2 k sr1 ss1 sk1 n v2.\n  step_n m2 (sr,ss,k') = (Val v2,ss2,sk2) ∧\n  step_n n (sr,ss,k) = (sr1,ss1,sk1) ∧ is_halt (sr1,ss1,sk1) ∧\n  k' ≼ k\n  ⇒\n  ∃m3. m3 ≤ n ∧ step_n m3 (Val v2,ss2,sk2 ++ DROP (LENGTH k') k) = (sr1,ss1,sk1)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1368,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_fast_forward",
+    "statement": "step_n n (sr,ss,k::ks) = (sr1,ss1,sk1) ∧ is_halt (sr1,ss1,sk1) ∧\n  step_n m2 (sr,ss,[]) = (Val v2,ss2,[]) ⇒\n  ∃m3. m3 ≤ n ∧ step_n m3 (Val v2,ss2,k::ks) = (sr1,ss1,sk1)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1403,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_NONE_Val",
+    "statement": "step NONE (forceK2_none h::xs) (Val v) = (x0,x1,x2) ∧ x0 ≠ Error ⇒\n  ∃xs1. x2 = MAP forceK2_none xs1 ++ xs ∧ x1 = NONE ∧\n        (∀e. x0 ≠ Exn e) ∧ (∀e a. x0 ≠ Action e a) ∧\n        ∀ys. step NONE (forceK2_none h::ys) (Val v) =\n               (x0,x1,MAP forceK2_none xs1 ++ ys)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1414,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_NONE_Exp",
+    "statement": "step NONE xs (Exp l e) = (x0,x1,x2) ∧ x0 ≠ Error ⇒\n  ∃xs1. x2 = MAP forceK2_none xs1 ++ xs ∧ x1 = NONE ∧\n        (∀e. x0 ≠ Exn e) ∧ (∀e a. x0 ≠ Action e a) ∧\n        ∀ys. step NONE ys (Exp l e) = (x0,x1,MAP forceK2_none xs1 ++ ys)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1430,
+    "type": "Theorem"
+  },
+  {
+    "name": "step_n_NONE_split",
+    "statement": "step_n n (Exp env x,NONE,k::tk) = (r,z) ∧ is_halt (r,z) ∧ r ≠ Error ⇒\n  ∃m1 m2 v.\n    step_n m1 (Exp env x,NONE,[]) = (Val v,NONE,[]) ∧ m1 < n ∧\n    step_n m2 (Val v,NONE,k::tk) = (r,z) ∧ m2 ≤ n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1457,
+    "type": "Theorem"
+  },
+  {
+    "name": "find_match_list_SOME",
+    "statement": "find_match_list cn ws env css d = SOME (env', e) ⇔\n  (∃vs.\n    ALOOKUP css cn = SOME (vs, e) ∧ LENGTH ws = LENGTH vs ∧\n    env' = REVERSE (ZIP (vs,ws)) ++ env) ∨\n  (ALOOKUP css cn = NONE ∧\n   ∃alts. d = SOME (alts, e) ∧ ALOOKUP alts cn = SOME (LENGTH ws) ∧ env' = env)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1533,
+    "type": "Theorem"
+  },
+  {
+    "name": "find_match_SOME",
+    "statement": "find_match v env x css usopt = SOME (env', e) ⇔\n  ¬ MEM x (FLAT (MAP (FST o SND) css)) ∧ css ≠ [] ∧\n  ∃cn vs. v = Constructor cn vs ∧\n          find_match_list cn vs env css usopt = SOME (env', e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1547,
+    "type": "Theorem"
+  },
+  {
+    "name": "freevars_def",
+    "statement": "freevars (Var v) = {v} ∧\n  freevars (App sop es) = BIGUNION (set (MAP freevars es)) ∧\n  freevars (Lam NONE e) = freevars e ∧\n  freevars (Lam (SOME x) e) = freevars e DELETE x ∧\n  freevars (Letrec fns e) =\n    (freevars e ∪ (BIGUNION $ set $ MAP (λ(f,e). freevars e) fns)) DIFF\n    set (MAP FST fns) ∧\n  freevars (Let NONE e1 e2) = freevars e1 ∪ freevars e2 ∧\n  freevars (Let (SOME x) e1 e2) = freevars e1 ∪ (freevars e2 DELETE x) ∧\n  freevars (If e e1 e2) = freevars e ∪ freevars e1 ∪ freevars e2 ∧\n  freevars (Delay e) = freevars e ∧\n  freevars (Box e) = freevars e ∧\n  freevars (Force e) = freevars e ∧\n  freevars (Case v css d) =\n    ((case d of SOME (_,e) => freevars e | _ => {}) ∪ {v} ∪\n     (BIGUNION (set (MAP (λ(s,vs,e). freevars e DIFF set vs) css)) DELETE v)) ∧\n  freevars (Raise e) = freevars e ∧\n  freevars (Handle e1 x e2) = freevars e1 ∪ (freevars e2 DELETE x) ∧\n  freevars (HandleApp e1 e2) = freevars e1 ∪ freevars e2\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 113,
+    "type": "Definition"
+  },
+  {
+    "name": "get_atoms_def",
+    "statement": "get_atoms [] = SOME [] ∧\n  get_atoms (Atom a :: xs) = OPTION_MAP (λas. a::as) (get_atoms xs) ∧\n  get_atoms _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 137,
+    "type": "Definition"
+  },
+  {
+    "name": "mk_rec_env_def",
+    "statement": "mk_rec_env funs env =\n    MAP (λ(fn, _). (fn, Recclosure funs env fn)) funs ++ env",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 143,
+    "type": "Definition"
+  },
+  {
+    "name": "num_args_ok_def",
+    "statement": "num_args_ok AppOp n = (n = 2) ∧\n  num_args_ok (Cons s) n = T ∧\n  num_args_ok (AtomOp aop) n = T ∧\n  num_args_ok (Proj _ _) n = (n = 1) ∧\n  num_args_ok (IsEq _ _) n = (n = 1) ∧\n  num_args_ok Sub n = (n = 2) ∧\n  num_args_ok UnsafeSub n = (n = 2) ∧\n  num_args_ok Alloc n = (n = 2) ∧\n  num_args_ok Ref n = T ∧\n  num_args_ok Length n = (n = 1) ∧\n  num_args_ok Update n = (n = 3) ∧\n  num_args_ok UnsafeUpdate n = (n = 3) ∧\n  num_args_ok (FFI channel) n = (n = 1)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 149,
+    "type": "Definition"
+  },
+  {
+    "name": "continue_def",
+    "statement": "continue env exp (st:state option) k = (Exp env exp, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 166,
+    "type": "Definition"
+  },
+  {
+    "name": "push_def",
+    "statement": "push env exp (st:state option) k ks = (Exp env exp, st, k::ks)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 171,
+    "type": "Definition"
+  },
+  {
+    "name": "value_def",
+    "statement": "value v (st:state option) k = (Val v, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 176,
+    "type": "Definition"
+  },
+  {
+    "name": "error_def",
+    "statement": "error (st:state option) k = (Error, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 181,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Closure_def",
+    "statement": "dest_Closure (Closure s env x) = SOME (s, env, x) ∧\n  dest_Closure _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 185,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Recclosure_def",
+    "statement": "dest_Recclosure (Recclosure funs env fn) = SOME (funs, env, fn) ∧\n  dest_Recclosure _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 190,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyClosure_def",
+    "statement": "dest_anyClosure v =\n    case dest_Closure v of\n    | SOME x => SOME x\n    | NONE =>\n      case dest_Recclosure v of\n      | NONE => NONE\n      | SOME (f, env, n) =>\n          case ALOOKUP f n of\n          | SOME (Lam s x) => SOME (s, mk_rec_env f env, x)\n          | _ => NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 195,
+    "type": "Definition"
+  },
+  {
+    "name": "opt_bind_def",
+    "statement": "opt_bind NONE v env = env ∧\n  opt_bind (SOME n) v env = (n,v)::env",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 208,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Thunk_def",
+    "statement": "dest_Thunk (Thunk x) = SOME x ∧\n  dest_Thunk _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 213,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyThunk_def",
+    "statement": "dest_anyThunk v =\n    case dest_Thunk v of\n    | SOME w => SOME (w, [])\n    | NONE =>\n      case dest_Recclosure v of\n      | NONE => NONE\n      | SOME (f, env, n) =>\n        case ALOOKUP f n of\n          SOME (Delay x) => SOME (INR (env, x), f)\n        | _ => NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 218,
+    "type": "Definition"
+  },
+  {
+    "name": "application_def",
+    "statement": "application AppOp vs (st:state option) k = (\n    case dest_anyClosure (HD vs) of\n    | NONE => error st k\n    | SOME (arg, env', e) =>\n        continue (opt_bind arg (EL 1 vs) env') e st k) ∧\n  application (Cons s) vs st k = value (Constructor s vs) st k ∧\n  application (AtomOp aop) vs st k = (\n    case get_atoms vs of\n      NONE => error st k\n    | SOME as =>\n      case eval_op aop as of\n        SOME $ INL a => value (Atom a) st k\n      | SOME $ INR T => value (Constructor \"True\" []) st k\n      | SOME $ INR F => value (Constructor \"False\" []) st k\n      | _            => error st k) ∧\n  application Alloc vs st k = (\n    case HD vs, st of\n      Atom (Int i), SOME arrays =>\n        let n = if i < 0 then 0 else Num i in\n        value (Atom $ Loc $ LENGTH arrays)\n          (SOME (SNOC (REPLICATE n (EL 1 vs)) arrays)) k\n    | _ => error st k) ∧\n  application Ref vs st k = (\n    case st of\n      SOME arrays =>\n        value (Atom $ Loc $ LENGTH arrays)\n          (SOME (SNOC vs arrays)) k\n    | _ => error st k) ∧\n  application Length vs st k = (\n    case HD vs, st of\n      Atom (Loc n), SOME arrays => (\n        case oEL n arrays of\n          SOME l => value (Atom $ Int $ & LENGTH l) st k\n        | _ => error st k)\n    | _ => error st k) ∧\n  application (Proj s i) vs st k = (\n    case HD vs of\n      Constructor t ys => (\n        if t = s ∧ i < LENGTH ys then\n          value (EL i ys) st k\n        else error st k)\n    | _ => error st k) ∧\n  application (IsEq s i) vs st k = (\n    case HD vs of\n      Constructor t ys => (\n        if t = s ⇒ i = LENGTH ys then\n          value (Constructor (if t = s then \"True\" else \"False\") []) st k\n        else error st k)\n    | _ => error st k) ∧\n  application Sub vs st k = (\n    case (EL 0 vs, EL 1 vs, st) of\n      (Atom $ Loc n, Atom $ Int i, SOME arrays) => (\n        case oEL n arrays of\n          SOME l =>\n            if 0 ≤ i ∧ i < & LENGTH l then\n              value (EL (Num i) l) st k\n            else\n              (Exn (Constructor \"Subscript\" []), st, k)\n        | _ => error st k)\n    | _ => error st k) ∧\n  application UnsafeSub vs st k = (\n    case (EL 0 vs, EL 1 vs, st) of\n      (Atom $ Loc n, Atom $ Int i, SOME arrays) => (\n        case oEL n arrays of\n          SOME l =>\n            if 0 ≤ i ∧ i < & LENGTH l then\n              value (EL (Num i) l) st k\n            else\n              error st k\n        | _ => error st k)\n    | _ => error st k) ∧\n  application Update vs st k = (\n    case (EL 0 vs, EL 1 vs, st) of\n      (Atom $ Loc n, Atom $ Int i, SOME arrays) => (\n        case oEL n arrays of\n          SOME l =>\n            if 0 ≤ i ∧ i < & LENGTH l then\n              value\n                (Constructor \"\" [])\n                (SOME (LUPDATE (LUPDATE (EL 2 vs) (Num i) l) n arrays))\n                k\n            else\n              (Exn (Constructor \"Subscript\" []), st, k)\n        | _ => error st k)\n    | _ => error st k) ∧\n  application UnsafeUpdate vs st k = (\n    case (EL 0 vs, EL 1 vs, st) of\n      (Atom $ Loc n, Atom $ Int i, SOME arrays) => (\n        case oEL n arrays of\n          SOME l =>\n            if 0 ≤ i ∧ i < & LENGTH l then\n              value\n                (Constructor \"\" [])\n                (SOME (LUPDATE (LUPDATE (EL 2 vs) (Num i) l) n arrays))\n                k\n            else\n              error st k\n        | _ => error st k)\n    | _ => error st k) ∧\n  application (FFI channel) vs st k = (\n    case HD vs, st of\n      (Atom $ Str content, SOME _) => (Action channel content, st, k)\n    | _ => error st k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 236,
+    "type": "Definition"
+  },
+  {
+    "name": "return_def",
+    "statement": "return v st [] = value v st [] ∧\n  return v st (LetK env NONE e :: k) = continue env e st k ∧\n  return v st (LetK env (SOME x) e :: k) = continue ((x,v)::env) e st k ∧\n  return v st (IfK env e1 e2 :: k) = (\n    if v = Constructor \"True\"  [] then continue env e1 st k else\n    if v = Constructor \"False\" [] then continue env e2 st k else\n      error st k) ∧\n  return v st (RaiseK :: k) =\n    (if st = NONE then error st k else (Exn v, st, k)) ∧\n  return v st (HandleK env x e :: k) = value v st k ∧\n  return v st (HandleAppK env e :: k) = value v st k ∧\n  return v st (AppK env sop vs' [] :: k) = (let vs = v::vs' in\n    if ¬ num_args_ok sop (LENGTH vs) then error st k else\n    application sop vs st k) ∧\n  return v st (AppK env sop vs (e::es) :: k) =\n    continue env e st (AppK env sop (v::vs) es :: k) ∧\n  return v st (ForceK1 :: k) =\n    (case dest_anyThunk v of\n     | NONE => error st k\n     | SOME (INL v, _) => value v st k\n     | SOME (INR (env, x), fns) => continue (mk_rec_env fns env) x NONE (ForceK2 st :: k)) ∧\n  return v temp_st (ForceK2 st :: k) = value v st k ∧\n  return v st (BoxK :: k) = value (Thunk $ INL v) st k",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 343,
+    "type": "Definition"
+  },
+  {
+    "name": "find_match_list_def",
+    "statement": "find_match_list c ws env [] d =\n    (case d of\n     | NONE => NONE\n     | SOME (alts:((vname # num) list),e:exp) =>\n         if ALOOKUP alts c = SOME (LENGTH ws) then SOME (env,e) else NONE) ∧\n  find_match_list c ws env ((c',ns,e)::rows) d =\n    if c = c' then\n      if LENGTH ns = LENGTH ws then\n        SOME (REVERSE (ZIP (ns, ws)) ++ env, e)\n      else NONE\n    else find_match_list c ws env rows d",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 369,
+    "type": "Definition"
+  },
+  {
+    "name": "find_match_def",
+    "statement": "find_match w env n css d =\n    if MEM n (FLAT (MAP (FST o SND) css)) ∨ css = [] then NONE else\n      case w of\n      | Constructor c ws => find_match_list c ws env css d\n      | _ => NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 383,
+    "type": "Definition"
+  },
+  {
+    "name": "step_def",
+    "statement": "step st k (Exp env $ Var x) = (\n    case ALOOKUP env x of\n      SOME v => value v st k\n    | NONE => error st k) ∧\n  step st k (Exp env $ Lam x body) = value (Closure x env body) st k ∧\n  step st k (Exp env $ Delay body) = value (Thunk $ INR (env, body)) st k ∧\n  step st k (Exp env $ Letrec fns e) = continue (mk_rec_env fns env) e st k ∧\n  step st k (Exp env $ Let xopt e1 e2) = push env e1 st (LetK env xopt e2) k ∧\n  step st k (Exp env $ If e e1 e2) = push env e st (IfK env e1 e2) k ∧\n  step st k (Exp env $ Case v css d) = (\n    case ALOOKUP env v of\n      NONE => error st k\n    | SOME w =>\n      case find_match w env v css d of\n      | NONE => error st k\n      | SOME (env1,e1) => continue env1 e1 st k) ∧\n  step st k (Exp env $ Raise e) = push env e st RaiseK k ∧\n  step st k (Exp env $ Handle e1 x e2) = push env e1 st (HandleK env x e2) k ∧\n  step st k (Exp env $ HandleApp e1 e2) = push env e2 st (HandleAppK env e1) k ∧\n  step st k (Exp env $ App sop es) = (\n    if ¬ num_args_ok sop (LENGTH es) then error st k else\n    case REVERSE es of \n      [] => \n        application sop [] st k\n    | e::es' => push env e st (AppK env sop [] es') k) ∧\n  step st k (Exp env $ Box e) = push env e st BoxK k ∧\n  step st k (Exp env $ Force e) = push env e st ForceK1 k ∧\n\n  \n  step st k Error = error st k ∧\n\n  \n  step st [] (Exn v) = (Exn v, st, []) ∧\n  step st (k::ks) (Exn v) = (\n    case k of\n      HandleK env x e => continue ((x,v)::env) e st ks\n    | HandleAppK env e => push env e st (AppK env AppOp [v] []) ks\n    | _ => (Exn v, st, ks)) ∧\n\n  \n  step st k (Val v) = return v st k ∧\n\n  \n  step st k (Action ch c) = (Action ch c, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 395,
+    "type": "Definition"
+  },
+  {
+    "name": "is_halt_def",
+    "statement": "is_halt (Val v, st:state option, []) = T ∧\n  is_halt (Exn v, st, []) = T ∧\n  is_halt (Error, st, k) = T ∧\n  is_halt (Action ch c, st, k) = T ∧\n  is_halt _ = F",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 447,
+    "type": "Definition"
+  },
+  {
+    "name": "step_n_def",
+    "statement": "step_n n (sr, st, k) = FUNPOW (λ(sr, st, k). step st k sr) n (sr, st, k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 455,
+    "type": "Definition"
+  },
+  {
+    "name": "step_until_halt_def",
+    "statement": "step_until_halt (sr, st, k) =\n    case some n. is_halt (step_n n (sr, st, k)) of\n      NONE => Div\n    | SOME n =>\n        case step_n n (sr, st, k) of\n          (Action ch c, st, k) => Act (ch,c) k st\n        | (Error, _, _) => Err\n        | _ => Ret",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 459,
+    "type": "Definition"
+  },
+  {
+    "name": "sinterp_def",
+    "statement": "sinterp sr st k =\n    itree_unfold_err\n      (λ(sr, st, k).\n        case step_until_halt (sr, st, k) of\n        | Ret => Ret' ",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 470,
+    "type": "Definition"
+  },
+  {
+    "name": "semantics_def",
+    "statement": "semantics e env state k = sinterp (Exp env e) state k",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 485,
+    "type": "Definition"
+  },
+  {
+    "name": "itree_of_def",
+    "statement": "itree_of e = semantics e [] (SOME []) []",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 489,
+    "type": "Definition"
+  },
+  {
+    "name": "forceK2_none_def",
+    "statement": "forceK2_none (ForceK2 _) = ForceK2 NONE ∧\n  forceK2_none y = y",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 767,
+    "type": "Definition"
+  },
+  {
+    "name": "sop_of_def",
+    "statement": "sop_of (AppOp:csop) = (AppOp:sop) ∧\n  sop_of (Cons n) = Cons (explode n) ∧\n  sop_of (AtomOp m) = AtomOp m ∧\n  sop_of Alloc = Alloc ∧\n  sop_of Ref = Ref ∧\n  sop_of Length = Length ∧\n  sop_of Sub = Sub ∧\n  sop_of UnsafeSub = UnsafeSub ∧\n  sop_of Length = Length ∧\n  sop_of Update = Update ∧\n  sop_of UnsafeUpdate = UnsafeUpdate ∧\n  sop_of (FFI s) = FFI (explode s)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1559,
+    "type": "Definition"
+  },
+  {
+    "name": "exp_of_def",
+    "statement": "exp_of ((Var n):cexp) = (Var (explode n)):exp ∧\n  exp_of (App op xs) = App (sop_of op) (MAP exp_of xs) ∧\n  exp_of (Lam vn x) = Lam (OPTION_MAP explode vn) (exp_of x) ∧\n  exp_of (Letrec funs x) =\n    Letrec (MAP (λ(f,v,y). (explode f,Lam (SOME (explode v)) (exp_of y))) funs) (exp_of x) ∧\n  exp_of (Let vn x y) = Let (OPTION_MAP explode vn) (exp_of x) (exp_of y) ∧\n  exp_of (If x y z) = If (exp_of x) (exp_of y) (exp_of z) ∧\n  exp_of (Case v rows d) =\n    Case (explode v)\n         (MAP (λ(v,vs,y). (explode v,MAP explode vs,exp_of y)) rows)\n         (OPTION_MAP (λ(alts,e). (MAP (explode ## I) alts, exp_of e)) d) ∧\n  exp_of (Raise x) = Raise (exp_of x) ∧\n  exp_of (Handle x v y) = Handle (exp_of x) (explode v) (exp_of y) ∧\n  exp_of (HandleApp x y) = HandleApp (exp_of x) (exp_of y)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/stateLangScript.sml",
+    "line": 1574,
+    "type": "Definition"
+  },
+  {
+    "name": "exp_size_lemma",
+    "statement": "(∀x xs. MEM x xs ⇒ exp_size x ≤ exp3_size xs) ∧\n  (∀x y xs. MEM (x,y) xs ⇒ exp_size y ≤ exp1_size xs) ∧\n  (∀x xs. MEM x xs ⇒ v_size x < exp4_size xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 19,
+    "type": "Theorem"
+  },
+  {
+    "name": "no_value_Lams",
+    "statement": "∀l x. no_value (Lams l x) = no_value x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 55,
+    "type": "Theorem"
+  },
+  {
+    "name": "no_value_Apps",
+    "statement": "∀l x. no_value (Apps x l) = (no_value x ∧ EVERY no_value l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 61,
+    "type": "Theorem"
+  },
+  {
+    "name": "freevars_Lams",
+    "statement": "∀l e. freevars (Lams l e) = freevars e DIFF (set l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 72,
+    "type": "Theorem"
+  },
+  {
+    "name": "freevars_Apps",
+    "statement": "∀l e. freevars (Apps e l) = freevars e ∪ BIGUNION (set (MAP freevars l))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 79,
+    "type": "Theorem"
+  },
+  {
+    "name": "boundvars_Lams",
+    "statement": "∀l e. boundvars (Lams l e) = boundvars e ∪ (set l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 85,
+    "type": "Theorem"
+  },
+  {
+    "name": "boundvars_Apps",
+    "statement": "∀l e. boundvars (Apps e l) = boundvars e ∪ BIGUNION (set (MAP boundvars l))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 93,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_Lams",
+    "statement": "∀(l : string list) k e. l ≠ [] ⇒ eval_to k (Lams l e) = INR (Closure (HD l) (Lams (TL l) e))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 99,
+    "type": "Theorem"
+  },
+  {
+    "name": "Lams_split",
+    "statement": "∀l e. l ≠ [] ⇒ Lams l e = Lam (HD l) (Lams (TL l) e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 105,
+    "type": "Theorem"
+  },
+  {
+    "name": "exp_ind",
+    "statement": "∀P.\n    (∀n. P (Var n)) ∧\n    (∀op xs. (∀a. MEM a xs ⇒ P a) ⇒ P (Prim op xs)) ∧\n    (∀mop xs. (∀a. MEM a xs ⇒ P a) ⇒ P (Monad mop xs)) ∧\n    (∀x y z. P x ∧ P y ∧ P z ⇒ P (If x y z)) ∧\n    (∀x y. P x ∧ (∀z. exp_size z ≤ exp_size y ⇒ P z) ⇒ P x ⇒ P (App x y)) ∧\n    (∀s b. P b ⇒ P (Lam s b)) ∧\n    (∀v x y. P x ∧ P y ⇒ P (Let v x y)) ∧\n    (∀f x. (∀n x'. MEM (n,x') f ⇒ P x') ∧ P x ⇒ P (Letrec f x)) ∧\n    (∀x. P x ⇒ P (Delay x)) ∧\n    (∀x. P x ⇒ P (Force x)) ∧\n    (∀v. P (Value v)) ∧\n    (∀x. P x ⇒ P (MkTick x)) ⇒\n      ∀v. P v",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 116,
+    "type": "Theorem"
+  },
+  {
+    "name": "LIST_REL_FILTER",
+    "statement": "∀xs ys.\n    LIST_REL (λx y. P (FST x) ∧ P (FST y) ⇒ R x y) xs ys ⇒\n    MAP FST xs = MAP FST ys ⇒\n      LIST_REL R (FILTER (λ(x,y). P x) xs)  (FILTER (λ(x,y). P x) ys)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 149,
+    "type": "Theorem"
+  },
+  {
+    "name": "MAP_FST_FILTER",
+    "statement": "MAP FST (FILTER (λ(a,b). P a) xs) = FILTER P (MAP FST xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 159,
+    "type": "Theorem"
+  },
+  {
+    "name": "LIST_TO_SET_FILTER_DIFF",
+    "statement": "set (FILTER P l) = set l DIFF {x | ¬P x}",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 166,
+    "type": "Theorem"
+  },
+  {
+    "name": "freevars_subst",
+    "statement": "∀m x. freevars (subst m x) = freevars x DIFF set (MAP FST m)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 176,
+    "type": "Theorem"
+  },
+  {
+    "name": "boundvars_subst",
+    "statement": "∀e l. boundvars (subst l e) = boundvars e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 222,
+    "type": "Theorem"
+  },
+  {
+    "name": "closed_subst",
+    "statement": "closed (subst m x) ⇔ freevars x ⊆ set (MAP FST m)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 245,
+    "type": "Theorem"
+  },
+  {
+    "name": "closed_simps",
+    "statement": "(∀f x. closed (App f x) ⇔ closed f ∧ closed x) ∧\n  (∀s x y. closed (Let (SOME s) x y) ⇔ closed x ∧ freevars y ⊆ {s}) ∧\n  (∀s x y. closed (Lam s x) ⇔ freevars x ⊆ {s}) ∧\n  (∀x y. closed (Let NONE x y) ⇔ closed x ∧ closed y) ∧\n  (∀x y z. closed (If x y z) ⇔ closed x ∧ closed y ∧ closed z) ∧\n  (∀f x. closed (Letrec f x) ⇔\n     BIGUNION (set (MAP (λ(f,x). freevars x) f)) ⊆ set (MAP FST f) ∧\n     freevars x ⊆ set (MAP FST f)) ∧\n  (∀op xs. closed (Prim op xs) ⇔ EVERY closed xs) ∧\n  (∀mop xs. closed (Monad mop xs) ⇔ EVERY closed xs) ∧\n  (∀x. closed (Force x) ⇔ closed x)  ∧\n  (∀x. closed (Delay x) ⇔ closed x)  ∧\n  (∀v. closed (Value v) ⇔ T)  ∧\n  (∀x. closed (MkTick x) ⇔ closed x) ∧\n  (∀v. closed (Var v) ⇔ F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 251,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_APPEND",
+    "statement": "∀e l1 l2. subst (l1 ++ l2) e = subst l1 (subst l2 e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 275,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_remove",
+    "statement": "∀vs x bvs.\n    DISJOINT bvs (freevars x) ⇒\n      subst (FILTER (λ(n,x). n ∉ bvs) vs) x =\n      subst vs x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 296,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_notin_frees",
+    "statement": "∀vs e. DISJOINT (set (MAP FST vs)) (freevars e) ⇒ subst vs e = e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 374,
+    "type": "Theorem"
+  },
+  {
+    "name": "MEM_FST",
+    "statement": "∀l p. MEM p l ⇒ MEM (FST p) (MAP FST l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 382,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_commutes",
+    "statement": "∀x vs ws.\n    DISJOINT (set (MAP FST vs)) (set (MAP FST ws)) ⇒ subst vs (subst ws x) = subst ws (subst vs x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 390,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst1_commutes",
+    "statement": "∀x v n m w.\n    n ≠ m ⇒ subst1 n v (subst1 m w x) = subst1 m w (subst1 n v x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 456,
+    "type": "Theorem"
+  },
+  {
+    "name": "ALOOKUP_SOME_REVERSE_EL",
+    "statement": "ALOOKUP (REVERSE l) k = SOME v ⇒ ∃n. n < LENGTH l ∧ EL n l = (k, v)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 464,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_App",
+    "statement": "∀vs f e. subst vs (App f e) = App (subst vs f) (subst vs e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 475,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_Force",
+    "statement": "∀vs e. subst vs (Force e) = Force (subst vs e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 481,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_Tick",
+    "statement": "∀vs e. subst vs (Tick e) = Tick (subst vs e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 487,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_Var",
+    "statement": "∀vs s. subst vs (Var s) = case ALOOKUP (REVERSE vs) s of NONE => Var s | SOME x2 => Value x2",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 493,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_Lams",
+    "statement": "∀l e b. subst b (Lams l e) = Lams l (subst (FILTER (λ(v,e). ¬MEM v l) b) e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 499,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_Apps",
+    "statement": "∀l e b. subst b (Apps e l) = Apps (subst b e) (MAP (subst b) l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 506,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_wo_WF",
+    "statement": "WF eval_to_wo",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 521,
+    "type": "Theorem"
+  },
+  {
+    "name": "rel_ok_get_atoms",
+    "statement": "∀x y.\n    rel_ok ae Rv Re ∧\n    LIST_REL Rv x y ∧\n    (∀z. MEM z x ⇒ ∀w. z ≠ DoTick w) ⇒\n      get_atoms x = get_atoms y",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 612,
+    "type": "Theorem"
+  },
+  {
+    "name": "sim_ok_next",
+    "statement": "∀k v c s w d t.\n    rel_ok allow_error Rv Re ∧\n    sim_ok allow_error Rv Re ∧\n    ($= +++ Rv) v w ∧\n    cont_rel Re c d ∧\n    state_rel Rv s t ∧\n    (¬allow_error ⇒ next k v c s ≠ Err) ⇒\n      next_rel Rv Re (next k v c s) (next k w d t)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 632,
+    "type": "Theorem"
+  },
+  {
+    "name": "sim_ok_next_action",
+    "statement": "rel_ok allow_error Rv Re ∧\n  sim_ok allow_error Rv Re ∧\n  ($= +++ Rv) v w ∧\n  cont_rel Re c d ∧\n  state_rel Rv s t ∧\n  (¬allow_error ⇒ next_action v c s ≠ Err) ⇒\n    next_rel Rv Re (next_action v c s) (next_action w d t)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1042,
+    "type": "Theorem"
+  },
+  {
+    "name": "sim_ok_interp",
+    "statement": "rel_ok allow_error Rv Re ∧\n  sim_ok allow_error Rv Re ∧\n  ($= +++ Rv) v w ∧\n  cont_rel Re c d ∧\n  state_rel Rv s t ∧\n  (¬allow_error ⇒ pure_semantics$safe_itree (interp v c s)) ⇒\n    interp v c s = interp w d t",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1084,
+    "type": "Theorem"
+  },
+  {
+    "name": "semantics_fail",
+    "statement": "pure_semantics$safe_itree (semantics x c s) ⇒\n    eval x ≠ INL Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1137,
+    "type": "Theorem"
+  },
+  {
+    "name": "sim_ok_semantics",
+    "statement": "rel_ok allow_error Rv Re ∧\n  sim_ok allow_error Rv Re ∧\n  Re x y ∧\n  (¬allow_error ⇒ pure_semantics$safe_itree (semantics x Done [])) ⇒\n    semantics x Done [] = semantics y Done []",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1148,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_equals_eval",
+    "statement": "eval_to k x ≠ INL Diverge ⇒ eval_to k x = eval x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1169,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_Force",
+    "statement": "eval (Force (Value v)) =\n    case dest_Tick v of\n      NONE =>\n        do\n          (y,binds) <- dest_anyThunk v;\n          eval (subst_funs binds y)\n        od\n    | SOME w => eval (Force (Value w))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1179,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_not_error",
+    "statement": "eval x ≠ INL Type_error ⇒\n    ∀k. eval_to k x ≠ INL Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1222,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_eval_lift",
+    "statement": "(∀k x y.\n     Re x y ∧\n     (allow_error ∨ (∀k. eval_to k x ≠ INL Type_error)) ⇒\n       ($= +++ Rv) (eval_to k x) (eval_to k y)) ⇒\n    ∀x y.\n      Re x y ∧\n      (allow_error ∨ eval x ≠ INL Type_error) ⇒\n        ($= +++ Rv) (eval x) (eval y)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 1235,
+    "type": "Theorem"
+  },
+  {
+    "name": "no_value_def",
+    "statement": "(no_value (Var n) = T) ∧\n  (no_value (Force x) = no_value x) ∧\n  (no_value (Prim op xs) = EVERY no_value xs) ∧\n  (no_value (Monad mop xs) = EVERY no_value xs) ∧\n  (no_value (If x y z) = (no_value x ∧ no_value y ∧ no_value z)) ∧\n  (no_value (App x y) = (no_value x ∧ no_value y)) ∧\n  (no_value (Lam s x) = no_value x) ∧\n  (no_value (Let opt x y) = (no_value x ∧ no_value y)) ∧\n  (no_value (MkTick x) = no_value x) ∧\n  (no_value (Letrec f x) = (no_value x ∧ EVERY no_value (MAP SND f) ∧ EVERY ok_bind (MAP SND f))) ∧\n  (no_value (Value v) = F) ∧\n  (no_value (Delay x) = no_value x)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 35,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_to_wo_def",
+    "statement": "eval_to_wo = inv_image ($< LEX $<) (I ## exp_size)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 517,
+    "type": "Definition"
+  },
+  {
+    "name": "sim_ok_def",
+    "statement": "sim_ok allow_error Rv Re ⇔\n    (∀x y.\n       Re x y ∧\n       (¬allow_error ⇒ eval x ≠ INL Type_error) ⇒\n         ($= +++ Rv) (eval x) (eval y)) ∧\n    (∀vs ws x y.\n       LIST_REL Rv (MAP SND vs) (MAP SND ws) ∧\n       MAP FST vs = MAP FST ws ∧\n       Re x y ⇒\n         Re (subst vs x) (subst ws y))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 535,
+    "type": "Definition"
+  },
+  {
+    "name": "cont_rel_def",
+    "statement": "cont_rel Re Done Done = T ∧\n  cont_rel Re (BC v c) (BC w d) = (Re v w ∧ cont_rel Re c d) ∧\n  cont_rel Re (HC v c) (HC w d) = (Re v w ∧ cont_rel Re c d) ∧\n  cont_rel Re _ _ = F",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 548,
+    "type": "Definition"
+  },
+  {
+    "name": "state_rel_def",
+    "statement": "state_rel Rv = LIST_REL (LIST_REL Rv)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 555,
+    "type": "Definition"
+  },
+  {
+    "name": "next_rel_def",
+    "statement": "next_rel Rv Re (thunk_semantics$Act a c s) (thunk_semantics$Act b d t) =\n    (a = b ∧ cont_rel Re c d ∧ state_rel Rv s t) ∧\n  next_rel Rv Re Ret Ret = T ∧\n  next_rel Rv Re Div Div = T ∧\n  next_rel Rv Re Err Err = T ∧\n  next_rel Rv Re (_: (string # string) next_res) _ = F",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 559,
+    "type": "Definition"
+  },
+  {
+    "name": "rel_ok_def",
+    "statement": "rel_ok allow_error Rv Re ⇔\n    (∀v1 w1 v2 w2 f g.\n       Re v1 w1 ∧\n       Rv v2 w2 ∧\n       (¬allow_error ⇒\n          apply_closure v1 v2 f ≠ Err ∧\n          f (INL Type_error) = Err) ∧\n       (∀(x : err + v) y.\n              ($= +++ Rv) x y ∧\n              (¬allow_error ⇒ f x ≠ Err) ⇒\n                next_rel Rv Re (f x) (g y)\n                ) ⇒\n         next_rel Rv Re (apply_closure v1 v2 f)\n                        (apply_closure w1 w2 g)) ∧\n    (∀s x w.\n       Rv (Closure s x) w ⇒ (∃t y. w = Closure t y) ∨ (∃g m. w = Recclosure g m)) ∧\n    (∀f n w.\n       Rv (Recclosure f n) w ⇒ (∃g m. w = Recclosure g m) ∨ (∃t y. w = Closure t y)) ∧\n    (∀s w.\n       Rv (Thunk s) w ⇒ (∃t. w = Thunk t) ∨ (∃v. w = DoTick v)) ∧\n    (∀x w.\n       Rv (Atom x) w ⇒ w = Atom x) ∧\n    (∀v w.\n       Rv (DoTick v) w ⇒\n         ¬allow_error ∨\n         (∃u. w = DoTick u)) ∧\n    (∀s vs w.\n       Rv (Constructor s vs) w ⇒ ∃ws. w = Constructor s ws ∧\n                                      LIST_REL Rv vs ws) ∧\n    (∀s x y.\n       x = y ⇒ Rv (Monadic s [Lit x])\n                  (Monadic s [Lit y])) ∧\n    (∀s t.\n       Rv (Monadic s [Cons t []])\n          (Monadic s [Cons t []])) ∧\n    (∀s x y.\n       Rv x y ⇒ Rv (Monadic s [Value x])\n                   (Monadic s [Value y])) ∧\n    (∀mop vs w.\n       Rv (Monadic mop vs) w ⇒ ∃ws. w = Monadic mop ws ∧\n                                      LIST_REL Re vs ws)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangPropsScript.sml",
+    "line": 568,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_to'_oot_thm",
+    "statement": "∀t e. eval_to' (state 0 t) e = (OOT, (state 0 t))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 79,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to'_zero_thm",
+    "statement": "∀t e r s'.\n    eval_to' (state 0 t) e = (r, s')\n    ⇒ r = OOT",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 90,
+    "type": "Theorem"
+  },
+  {
+    "name": "rel_add_thm",
+    "statement": "(∀k c Q x x'.\n    val_rel (k + c) Q x x'\n    ⇒ val_rel k Q x x') ∧\n  (∀k c Q r r'.\n    res_rel (k + c) Q r r'\n    ⇒ res_rel k Q r r') ∧\n  (∀k c Qs e1 e2.\n    exp_rel (k + c) Qs e1 e2\n    ⇒ exp_rel k Qs e1 e2)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 98,
+    "type": "Theorem"
+  },
+  {
+    "name": "constr_compat_thm",
+    "statement": "∀(k : fuel) (QL : inv) (QG : inv)\n   (ys1 : string list) (ys2 : string list)\n   (x1 : string) (x2 : string) (sub1 : sigma)\n   (sub2 : sigma) (C : string)\n   (e1 : exp) (e2 : exp).\n    QL (state 0 0) (state 0 0)\n    ∧ (∀c1 t1 c2 t2.\n        QL (state c1 t1) (state c2 t2) \n        ⇒ QL (state (c1 + 1) t1) (state (c2 + 1) t2))\n    ∧ (LIST_REL (var_rel k QG sub1 sub2) ys1 ys2)\n    ∧ (∀vs1 vs2.\n        LIST_REL (val_rel k QG) vs1 vs2\n        ⇒ exp_rel k (QL, QG) (subst1 x1 (Constructor C vs1) e1)\n                             (subst1 x2 (Constructor C vs2) e2))\n    ⇒ exp_rel k (QL, QG)\n        (Let (SOME x1) (Value $ Constructor C []) e1)\n        (Let (SOME x2) (Value $ Constructor C []) e2)\n    \n\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 112,
+    "type": "Theorem"
+  },
+  {
+    "name": "rel_def",
+    "statement": "(val_rel (k : fuel) (Q : inv) (Constructor n vs) (Constructor n' vs') ⇔\n    n = n'\n    ∧ LIST_REL (val_rel k Q) vs vs') ∧\n  (val_rel k Q (Monadic op es) (Monadic op' es') ⇔\n    op = op'\n    ∧ ∀i. i < k\n      ⇒ LIST_REL (exp_rel i (Q, Q)) es es') ∧\n  (val_rel k Q (Closure x e) (Closure x' e') ⇔\n    ∀i v1 v2.\n      i < k\n      ⇒ val_rel i Q v1 v2\n      ⇒ exp_rel i (Q, Q) (subst1 x v1 e) (subst1 x' v2 e')) ∧\n  (val_rel k Q (Recclosure fs n) (Recclosure fs' n') ⇔\n    ∀i e e'.\n      i < k\n      ∧ ALOOKUP fs n = SOME e\n      ∧ ALOOKUP fs' n' = SOME e'\n      ⇒ exp_rel i (Q, Q) (subst_funs fs e) (subst_funs fs' e')) ∧\n  (val_rel k Q (Thunk e) (Thunk e') ⇔\n    ∀i. i < k ⇒ exp_rel i (Q, Q) e e') ∧\n  (val_rel k Q (Atom l) (Atom l') ⇔ l = l') ∧\n  (val_rel k Q (DoTick v) (DoTick v') ⇔ val_rel k Q v v') ∧\n  (val_rel k Q v1 v2 ⇔ F) ∧\n\n  (res_rel (k : fuel) (Q : inv) OOT OOT ⇔ T) ∧\n  (res_rel k Q Fail Fail ⇔ T) ∧\n  (res_rel k Q (Ok v) (Ok v') ⇔ val_rel k Q v v') ∧\n  (res_rel k Q r1 r2 ⇔ F) ∧\n\n  (exp_rel (k : fuel) ((QL, QG) : inv # inv) (e1 : exp) (e2 : exp) ⇔\n    ∀c1 t1 r1.\n      c1 ≤ k\n      ⇒ FST (eval_to' (state c1 t1) e1) = r1\n      ⇒ (∃c2 t2 r2.\n          FST (eval_to' (state c2 t2) e2) = r2\n          ∧ QL (state c1 t1) (state c2 t2)\n          ∧ res_rel (k - c1) QG r1 r2))\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 11,
+    "type": "Definition"
+  },
+  {
+    "name": "var_rel_def",
+    "statement": "var_rel (k : fuel) (Q : inv) (sub1 : sigma) (sub2 : sigma)\n          (x : string) (y : string) ⇔\n    ∀v1. ALOOKUP sub1 x = SOME v1\n         ⇒ ∃v2. ALOOKUP sub2 y = SOME v2\n                ∧ val_rel k Q v1 v2",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 57,
+    "type": "Definition"
+  },
+  {
+    "name": "subst_rel_def",
+    "statement": "subst_rel (k : fuel) (Q : inv) (S : string set)\n            (sub1 : sigma) (sub2 : sigma) ⇔\n    ∀x. x ∈ S ⇒ var_rel k Q sub1 sub2 x x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 65,
+    "type": "Definition"
+  },
+  {
+    "name": "top_rel_def",
+    "statement": "top_rel ((QL, QG) : inv # inv) (e1 : exp) (e2 : exp) ⇔\n    ∀k sub1 sub2.\n      subst_rel k QG (freevars e1) sub1 sub2\n      ⇒ (freevars e1) ⊆ (set (MAP FST sub1))\n      ⇒ exp_rel k (QL, QG) (subst sub1 e1) (subst sub2 e2)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRelScript.sml",
+    "line": 71,
+    "type": "Definition"
+  },
+  {
+    "name": "FIND_pred_thm",
+    "statement": "(∀P xs x. FIND P xs = SOME x ⇒ P x) ∧\n  (∀P xs. FIND P xs = NONE ⇒ (∀x. MEM x xs ⇒ ¬(P x)))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 65,
+    "type": "Theorem"
+  },
+  {
+    "name": "FIND_MEM_thm",
+    "statement": "∀P xs x. FIND P xs = SOME x ⇒ MEM x xs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 74,
+    "type": "Theorem"
+  },
+  {
+    "name": "MEM_MAP_SND_thm",
+    "statement": "∀x x' xs.\n    MEM (x, x') xs ⇒ MEM x' (MAP SND xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 83,
+    "type": "Theorem"
+  },
+  {
+    "name": "FIND_FST_WITH_SND_thm",
+    "statement": "∀l f g.\n    FIND (f ∘ FST) l = NONE\n    ⇒ FIND (f ∘ FST) (MAP (with_snd g) l) = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 94,
+    "type": "Theorem"
+  },
+  {
+    "name": "FIND_FST_WITH_SND_SOME_thm",
+    "statement": "∀l f g x.\n    FIND (f ∘ FST) l = SOME x\n    ⇒ FIND (f ∘ FST) (MAP (with_snd g) l)\n        = SOME (with_snd g x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 104,
+    "type": "Theorem"
+  },
+  {
+    "name": "MAP_FST_WITH_SND_thm",
+    "statement": "∀l f g.\n    MAP (f ∘ FST) (MAP (with_snd g) l)\n    = MAP (f ∘ FST) l",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 115,
+    "type": "Theorem"
+  },
+  {
+    "name": "MAP_SND_MAP_WITH_FST_thm",
+    "statement": "∀f l.\n    MAP SND (MAP (with_fst f) l) = MAP SND l",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 125,
+    "type": "Theorem"
+  },
+  {
+    "name": "EVERY_MAP_WITH_FST_thm",
+    "statement": "∀P f l.\n    EVERY (P ∘ FST) (MAP (with_fst f) l)\n    ⇔ EVERY (P ∘ f ∘ FST) l",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 134,
+    "type": "Theorem"
+  },
+  {
+    "name": "MAP_WITH_FST_WITH_SND_thm",
+    "statement": "∀f g l.\n    MAP (with_fst f) (MAP (with_snd g) l)\n    = MAP (with_snd g) (MAP (with_fst f) l)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 144,
+    "type": "Theorem"
+  },
+  {
+    "name": "NOT_MEM_EVERY_thm",
+    "statement": "∀x l. ¬MEM x l ⇒ EVERY (λy. y ≠ x) l",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 154,
+    "type": "Theorem"
+  },
+  {
+    "name": "isok_def",
+    "statement": "(isok (Ok x) = T) ∧\n  (isok _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 13,
+    "type": "Definition"
+  },
+  {
+    "name": "isfail_def",
+    "statement": "(isfail Fail = T) ∧\n  (isfail _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 18,
+    "type": "Definition"
+  },
+  {
+    "name": "isoot_def",
+    "statement": "(isoot OOT = T) ∧\n  (isoot _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 23,
+    "type": "Definition"
+  },
+  {
+    "name": "outok_def",
+    "statement": "outok (Ok x) = x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 28,
+    "type": "Definition"
+  },
+  {
+    "name": "state_add_def",
+    "statement": "state_add s s' = state (s.c + s'.c) (s.t + s'.t)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 38,
+    "type": "Definition"
+  },
+  {
+    "name": "state_sub_def",
+    "statement": "state_sub s s' = state (s.c - s'.c) (s.t + s'.t)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 43,
+    "type": "Definition"
+  },
+  {
+    "name": "fuel_def",
+    "statement": "(fuel (e : exp) : fuel = 1)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 48,
+    "type": "Definition"
+  },
+  {
+    "name": "trace_def",
+    "statement": "(trace (App f x) : trace = 1) ∧\n  (trace e = 0)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 52,
+    "type": "Definition"
+  },
+  {
+    "name": "with_fst_def",
+    "statement": "with_fst f (x, y) = (f x, y)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 57,
+    "type": "Definition"
+  },
+  {
+    "name": "with_snd_def",
+    "statement": "with_snd f (x, y) = (x, f y)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_primitivesScript.sml",
+    "line": 61,
+    "type": "Definition"
+  },
+  {
+    "name": "fix_state_non_incr_thm",
+    "statement": "∀s1 s2 x res.\n   fix_state s1 x = (res, s2) ⇒ s2.c ≤ s1.c",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 12,
+    "type": "Theorem"
+  },
+  {
+    "name": "check_state_CONG",
+    "statement": "∀s1 e1 s2 e2 f1 f2.\n   s1 = s2 ∧ e1 = e2\n   ∧ (∀s'. s'.c < s1.c ⇒ f1 s' = f2 s')\n   ⇒ check_state s1 e1 f1 = check_state s2 e2 f2",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 27,
+    "type": "Theorem"
+  },
+  {
+    "name": "mapok_non_incr_lemma",
+    "statement": "∀st rs rs' st'.\n    mapok st rs = (rs', st')\n    ∧ (∀s. MEM s (MAP SND rs) ⇒ s.c ≤ st.c)\n    ⇒ st'.c ≤ st.c",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 97,
+    "type": "Theorem"
+  },
+  {
+    "name": "mapok_oot_thm",
+    "statement": "∀s rs r s'.\n    mapok s rs = (r, s') ∧ r ≠ OOT\n    ⇒ FIND (isoot ∘ FST) rs = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 119,
+    "type": "Theorem"
+  },
+  {
+    "name": "mapok_ok_thm",
+    "statement": "∀s rs r s'.\n    mapok s rs = (Ok r, s') ⇒ r = MAP (outok ∘ FST) rs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 127,
+    "type": "Theorem"
+  },
+  {
+    "name": "mapok_add_thm",
+    "statement": "∀(s : state) sp q r s'.\n    mapok s q = (r, s') ∧ r ≠ OOT\n    ⇒ mapok (s + sp) (MAP (with_snd (λs. s + sp)) q)\n        = (r, s' + sp)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 146,
+    "type": "Theorem"
+  },
+  {
+    "name": "atom_lit_isok_thm",
+    "statement": "∀x. (isok ∘ atom_lit) x ⇒ isok x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 164,
+    "type": "Theorem"
+  },
+  {
+    "name": "EVERY_atom_lit_thm",
+    "statement": "∀l.\n    EVERY (isok ∘ atom_lit ∘ FST) l\n    ⇒ EVERY (isok ∘ FST) l",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 170,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to'_non_incr_thm",
+    "statement": "(∀s e res s'.\n    eval_to' s e = (res, s') ⇒ s'.c ≤ s.c) ∧\n  (∀s xs rs s'.\n    result_map' s xs = (rs, s')\n    ⇒ (s'.c ≤ s.c\n       ∧ (∀st. MEM st (MAP SND rs) ⇒ st.c ≤ s.c)))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 315,
+    "type": "Theorem"
+  },
+  {
+    "name": "fix_state_thm",
+    "statement": "∀s e. fix_state s (eval_to' s e) = eval_to' s e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 343,
+    "type": "Theorem"
+  },
+  {
+    "name": "every_isok_thm",
+    "statement": "∀l.\n    EVERY (isok ∘ FST) l\n    ⇒ FIND (isoot ∘ FST) l = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 399,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to'_add_lemma",
+    "statement": "(∀s e r s' sp.\n    eval_to' s e = (r, s') ∧ r ≠ OOT\n    ⇒ eval_to' (s + sp) e = (r, s' + sp)) ∧\n  (∀s xs rs s' sp.\n    result_map' s xs = (rs, s')\n    ∧ FIND (isoot ∘ FST) rs = NONE\n    ⇒ result_map' (s + sp) xs = (MAP (with_snd (λs. s + sp)) rs, s' + sp))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 407,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to'_add_thm",
+    "statement": "(∀s sp e r s'.\n    eval_to' s e = (r, s') ∧ r ≠ OOT\n    ⇒ eval_to' (s + sp) e = (r, s' + sp)) ∧\n  (∀s sp xs rs s'.\n    result_map' s xs = (rs, s')\n    ∧ FIND (isoot ∘ FST) rs = NONE\n    ⇒ result_map' (s + sp) xs = (MAP (with_snd (λs. s + sp)) rs, s' + sp))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 445,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_add_thm",
+    "statement": "∀c c' e v.\n    eval_to c e ≠ INL Diverge\n    ⇒ eval_to (c + c') e ≠ INL Diverge",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 457,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_requiv_lemma",
+    "statement": "(∀s e v s'.\n    eval_to' s e = (Ok v, s')\n    ⇒ ∃c. eval_to c e = INR v) ∧\n  (∀s xs rs s'.\n    result_map' s xs = (rs, s')\n    ∧ EVERY (isok ∘ FST) rs\n    ⇒ ∃c. result_map (λx. eval_to c x) xs = INR (MAP (outok ∘ FST) rs))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 467,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_lequiv_lemma",
+    "statement": "∀c e v.\n    eval_to c e = INR v\n    ⇒ ∃s s' . eval_to' s e = (Ok v, s')",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 479,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_equiv_thm",
+    "statement": "(∀c e v.\n    eval_to c e = INR v\n    ⇒ ∃s s'. eval_to' s e = (Ok v, s')) ∧\n  (∀s e v s'.\n    eval_to' s e = (Ok v, s')\n    ⇒ ∃c. eval_to c e = INR v)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 487,
+    "type": "Theorem"
+  },
+  {
+    "name": "fix_state_def",
+    "statement": "fix_state s1 (res, s2) =\n    if s1.c < s2.c then (res, s1) else (res, s2)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 7,
+    "type": "Definition"
+  },
+  {
+    "name": "check_state_def",
+    "statement": "check_state s e f =\n    if (s.c < fuel e) ∨ (s.t < trace e) then\n      (OOT, s)\n    else\n      f $ s - (state (fuel e) (trace e))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 19,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Closure'_def",
+    "statement": "(dest_Closure' (Closure s x) = SOME (s, x)) ∧\n  (dest_Closure' _ = NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 36,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Recclosure'_def",
+    "statement": "(dest_Recclosure' (Recclosure f n) = SOME (f, n)) ∧\n  (dest_Recclosure' _ = NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 41,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyClosure'_def",
+    "statement": "dest_anyClosure' v =\n    case dest_Closure' v of\n    | SOME (s, x) => SOME (s, x, [])\n    | NONE =>\n        (case dest_Recclosure' v of\n         | SOME (f, n) =>\n            (case ALOOKUP (REVERSE f) n of\n             | SOME (Lam s x) => SOME (s, x, MAP (λ(g, x). (g, Recclosure f g)) f)\n             | _ => NONE)\n         | NONE => NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 46,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Tick'_def",
+    "statement": "(dest_Tick' (DoTick v) = SOME v) ∧\n  (dest_Tick' _ = NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 59,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Thunk'_def",
+    "statement": "(dest_Thunk' (Thunk x) = SOME x) ∧\n  (dest_Thunk' _ = NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 64,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyThunk'_def",
+    "statement": "dest_anyThunk' v =\n    case dest_Thunk' v of\n    | SOME w => SOME (w, [])\n    | _ =>\n        (case dest_Recclosure' v of\n         | SOME (f, n) =>\n            (case ALOOKUP (REVERSE f) n of\n             | SOME (Delay x) => SOME (x, f)\n             | _ => NONE)\n         | NONE => NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 69,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Constructor'_def",
+    "statement": "(dest_Constructor' (Constructor s vs) = SOME (s, vs)) ∧\n  (dest_Constructor' _ = NONE)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 82,
+    "type": "Definition"
+  },
+  {
+    "name": "mapok_def",
+    "statement": "mapok st rs =\n    case FIND (isfail ∘ FST) rs of\n    | SOME (Fail, st) => (Fail, st)\n    | NONE =>\n        (case FIND (isoot ∘ FST) rs of\n         | SOME (OOT, st) => (OOT, st)\n         | NONE => (Ok (MAP (outok ∘ FST) rs), st))",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 87,
+    "type": "Definition"
+  },
+  {
+    "name": "atom_lit_def",
+    "statement": "atom_lit r =\n    case r of\n    | Ok (Atom l) => Ok l\n    | Ok _ => Fail\n    | Fail => Fail\n    | OOT => OOT",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 155,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_to'_def",
+    "statement": "(eval_to' st (Value v) =\n    check_state st (Value v) (λst.\n      (Ok v, st))) ∧\n  (eval_to' st (Var n) =\n    check_state st (Var n) (λst.\n      (Fail, st))) ∧\n  (eval_to' st (App f x) =\n    check_state st (App f x) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok xv, st') =>\n          (case fix_state st' (eval_to' st' f) of\n           | (Ok fv, st'') =>\n               (case dest_anyClosure' fv of\n                | SOME (n, body, binds) =>\n                    let y = subst (binds ++ [(n, xv)]) body in\n                    eval_to' st'' y\n                | NONE => (Fail, st''))\n           | res => res)\n      | res => res)) ∧\n  (eval_to' st (Lam n x) =\n    check_state st (Lam n x) (λst.\n      (Ok (Closure n x), st))) ∧\n  (eval_to' st (Let NONE x y) =\n    check_state st (Let NONE x y) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok xv, st') => eval_to' st' y\n      | res => res)) ∧\n  (eval_to' st (Let (SOME n) x y) =\n    check_state st (Let (SOME n) x y) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok xv, st') => eval_to' st' (subst1 n xv y)\n      | res => res)) ∧\n  (eval_to' st (If x y z) =\n    check_state st (If x y z) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok (Constructor \"True\" []), st') => eval_to' st' y\n      | (Ok (Constructor \"False\" []), st') => eval_to' st' z\n      | (Ok _, st') => (Fail, st')\n      | res => res)) ∧\n  (eval_to' st (Letrec funs x) =\n    check_state st (Letrec funs x) (λst.\n      eval_to' st (subst_funs funs x))) ∧\n  (eval_to' st (Delay x) =\n    check_state st (Delay x) (λst.\n      (Ok (Thunk x), st))) ∧\n  (eval_to' st (Force x) =\n    check_state st (Force x) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok xv, st') =>\n          (case dest_anyThunk' xv of\n           | SOME (y, binds) =>\n               eval_to' st' (subst_funs binds y)\n           | NONE => (Fail, st'))\n      | res => res)) ∧\n  (eval_to' st (MkTick x) =\n    check_state st (MkTick x) (λst.\n      case fix_state st (eval_to' st x) of\n      | (Ok xv, st') => (Ok (DoTick xv), st')\n      | res => res)) ∧\n  (eval_to' st (Prim op xs) =\n    check_state st (Prim op xs) (λst.\n      (case op of\n       | If => (Fail, st)\n       | Seq => (Fail, st)\n       | Proj s i =>\n           if LENGTH xs ≠ 1 then\n             (Fail, st)\n           else\n             (case fix_state st (eval_to' st (HD xs)) of\n              | (Ok v, st') =>\n                  (case dest_Constructor' v of\n                   | SOME (t, ys) =>\n                       if (t ≠ s) ∨ (i ≥ LENGTH ys) then\n                         (Fail, st')\n                       else\n                         (Ok (EL i ys), st')\n                   | NONE => (Fail, st'))\n              | res => res)\n       | IsEq s i a =>\n           if LENGTH xs ≠ 1 then\n             (Fail, st)\n           else\n             (case fix_state st (eval_to' st (HD xs)) of\n              | (Ok v, st') =>\n                  (case dest_Constructor' v of\n                   | SOME (t, ys) =>\n                       if (¬(t = s ⇒ i = LENGTH ys)) ∨ (t ∈ monad_cns) then\n                         (Fail, st')\n                       else if t = s then\n                         (Ok (Constructor \"True\" []), st')\n                       else\n                         (Ok (Constructor \"False\" []), st')\n                   | NONE => (Fail, st'))\n              | res => res)\n       | AtomOp aop =>\n           let (rs, st') = result_map' st xs in\n           let rs = MAP (with_fst atom_lit) rs in\n           (case mapok st rs of\n            | (Fail, st') => (Fail, st')\n            | (OOT, st') => (OOT, st')\n            | (Ok vs, st') =>\n                (case eval_op aop vs of\n                 | SOME (INL v) =>\n                     (Ok (Atom v), st')\n                  | SOME (INR b) =>\n                      (Ok (Constructor (if b then \"True\" else \"False\") []), st')\n                  | NONE => (Fail, st')))\n       | Cons s =>\n           let (rs, st') = result_map' st xs in\n           (case mapok st rs of\n            | (Fail, st') => (Fail, st')\n            | (OOT, st') => (OOT, st')\n            | (Ok vs, st') => (Ok (Constructor s vs), st'))))) ∧\n  (eval_to' s (Monad mop xs) =\n    check_state s (Monad mop xs) (λs.\n      (Ok (Monadic mop xs), s))) ∧\n  (result_map' st [] = ([], st)) ∧\n  (result_map' st (x::xs) =\n    let (r, st') = fix_state st (eval_to' st x) in\n    let (rs, st'') = result_map' st' xs in\n    ((r, st') :: rs, st''))\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangRel_semanticsScript.sml",
+    "line": 181,
+    "type": "Definition"
+  },
+  {
+    "name": "subst_empty",
+    "statement": "subst [] x = x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 96,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst1_def",
+    "statement": "subst1 n v (Var s) = (if n = s then Value v else Var s) ∧\n  subst1 n v (Prim op xs) = Prim op (MAP (subst1 n v) xs) ∧\n  subst1 n v (Monad mop xs) = Monad mop (MAP (subst1 n v) xs) ∧\n  subst1 n v (If x y z) =\n    If (subst1 n v x) (subst1 n v y) (subst1 n v z) ∧\n  subst1 n v (App x y) = App (subst1 n v x) (subst1 n v y) ∧\n  subst1 n v (Lam s x) = (if n = s then Lam s x else Lam s (subst1 n v x)) ∧\n  subst1 n v (Let NONE x y) =\n    Let NONE (subst1 n v x) (subst1 n v y) ∧\n  subst1 n v (Let (SOME s) x y) =\n    Let (SOME s) (subst1 n v x) (if n = s then y else subst1 n v y) ∧\n  subst1 n v (Letrec f x) =\n    (if MEM n (MAP FST f) then\n       Letrec f x\n     else\n       Letrec (MAP (λ(f, x). (f, subst1 n v x)) f) (subst1 n v x)) ∧\n  subst1 n v (Delay x) = Delay (subst1 n v x) ∧\n  subst1 n v (Force x) = Force (subst1 n v x) ∧\n  subst1 n v (Value w) = Value w ∧\n  subst1 n v (MkTick x) = MkTick (subst1 n v x)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 106,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_ind",
+    "statement": "∀P.\n    (∀k v. P k (Value v)) ∧\n    (∀k n. P k (Var n)) ∧\n    (∀k f x.\n       (∀y binds s xv body.\n          y = subst (binds ⧺ [(s,xv)]) body ∧ k ≠ 0 ⇒ P (k − 1) y) ∧\n       P k f ∧ P k x ⇒\n       P k (App f x)) ∧\n    (∀k s x. P k (Lam s x)) ∧\n    (∀k x y.\n       (k ≠ 0 ⇒ P (k − 1) x) ∧ (k ≠ 0 ⇒ P (k − 1) y) ⇒\n       P k (Let NONE x y)) ∧\n    (∀k n x y.\n       (∀v. k ≠ 0 ⇒ P (k − 1) (subst1 n v y)) ∧\n       (k ≠ 0 ⇒ P (k − 1) x) ⇒\n         P k (Let (SOME n) x y)) ∧\n    (∀k x y z.\n      (∀v. k ≠ 0 ∧\n           v ≠ Constructor \"True\" [] ∧\n           v = Constructor \"False\" [] ⇒\n             P (k − 1) z) ∧\n      (∀v. k ≠ 0 ∧ v = Constructor \"True\" [] ⇒ P (k − 1) y) ∧\n      (k ≠ 0 ⇒ P (k − 1) x) ⇒\n        P k (If x y z)) ∧\n    (∀k funs x.\n      (k ≠ 0 ⇒ P (k − 1) (subst_funs funs x)) ⇒ P k (Letrec funs x)) ∧\n    (∀k x. P k (Delay x)) ∧\n    (∀k x.\n      (∀y binds.\n         k ≠ 0 ⇒\n           P (k − 1) (subst_funs binds y)) ∧\n      (∀w.\n         k ≠ 0 ⇒\n           P (k − 1) (Force (Value w))) ∧\n      (k ≠ 0 ⇒ P k x) ⇒\n        P k (Force x)) ∧\n    (∀k x. P k x ⇒ P k (MkTick x)) ∧\n    (∀k op xs.\n      (∀aop x.\n         op = AtomOp aop ∧\n         MEM x xs ∧\n         k ≠ 0 ⇒\n           P (k − 1) x) ∧\n      (∀s x.\n         op = Cons s ∧\n         MEM x xs ⇒\n           P k x) ∧\n      (∀s'' i' a.\n         op = IsEq s'' i' a ∧\n         k ≠ 0 ⇒\n           P (k − 1) (HD xs)) ∧\n      (∀s' i.\n         op = Proj s' i ∧\n         k ≠ 0 ⇒\n           P (k − 1) (HD xs)) ⇒\n            P k (Prim op xs)) ∧\n    (∀k mop xs. P k (Monad mop xs)) ⇒\n        ∀v v1. P v v1",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 339,
+    "type": "Theorem"
+  },
+  {
+    "name": "eval_to_mono",
+    "statement": "∀k x j.\n    eval_to k x ≠ INL Diverge ∧\n    k ≤ j ⇒\n      eval_to j x = eval_to k x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 416,
+    "type": "Theorem"
+  },
+  {
+    "name": "FINITE_boundvars",
+    "statement": "∀e. FINITE (boundvars e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 582,
+    "type": "Theorem"
+  },
+  {
+    "name": "FINITE_freevars",
+    "statement": "∀e. FINITE (freevars e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 590,
+    "type": "Theorem"
+  },
+  {
+    "name": "boundvars_Lams",
+    "statement": "∀vL e. boundvars (Lams vL e) = set vL ∪ boundvars e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 600,
+    "type": "Theorem"
+  },
+  {
+    "name": "boundvars_Apps",
+    "statement": "∀eL e. boundvars (Apps e eL) = boundvars e ∪ BIGUNION (set $ MAP boundvars eL)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 607,
+    "type": "Theorem"
+  },
+  {
+    "name": "subst_def",
+    "statement": "subst m (Var s) =\n    (case ALOOKUP (REVERSE m) s of\n       NONE => Var s\n     | SOME x => Value x) ∧\n  subst m (Prim op xs) = Prim op (MAP (subst m) xs) ∧\n  subst m (Monad mop xs) = Monad mop (MAP (subst m) xs) ∧\n  subst m (If x y z) =\n    If (subst m x) (subst m y) (subst m z) ∧\n  subst m (App x y) = App (subst m x) (subst m y) ∧\n  subst m (Lam s x) = Lam s (subst (FILTER (λ(n,x). n ≠ s) m) x) ∧\n  subst m (Let NONE x y) = Let NONE (subst m x) (subst m y) ∧\n  subst m (Let (SOME s) x y) =\n    Let (SOME s) (subst m x) (subst (FILTER (λ(n,x). n ≠ s) m) y) ∧\n  subst m (Letrec f x) =\n    (let m1 = FILTER (λ(n, v). ¬MEM n (MAP FST f)) m in\n       Letrec (MAP (λ(n, x). (n, subst m1 x)) f) (subst m1 x)) ∧\n  subst m (Delay x) = Delay (subst m x) ∧\n  subst m (Force x) = Force (subst m x) ∧\n  subst m (Value v) = Value v ∧\n  subst m (MkTick x) = MkTick (subst m x)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 66,
+    "type": "Definition"
+  },
+  {
+    "name": "subst_funs_def",
+    "statement": "subst_funs f = subst (MAP (λ(g, x). (g, Recclosure f g)) f)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 131,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Closure_def",
+    "statement": "dest_Closure (Closure s x) = return (s, x) ∧\n  dest_Closure _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 135,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Recclosure_def",
+    "statement": "dest_Recclosure (Recclosure f n) = return (f, n) ∧\n  dest_Recclosure _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 140,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyClosure_def",
+    "statement": "dest_anyClosure v =\n    do\n      (s, x) <- dest_Closure v;\n       return (s, x, [])\n    od ++\n    do\n      (f, n) <- dest_Recclosure v;\n      case ALOOKUP (REVERSE f) n of\n        SOME (Lam s x) => return (s, x, MAP (λ(g, x). (g, Recclosure f g)) f)\n      | _ => fail Type_error\n    od",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 145,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Tick_def",
+    "statement": "dest_Tick (DoTick v) = SOME v ∧\n  dest_Tick _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 159,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Thunk_def",
+    "statement": "dest_Thunk (Thunk x) = return x ∧\n  dest_Thunk _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 164,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_anyThunk_def",
+    "statement": "dest_anyThunk v =\n    do\n      w <- dest_Thunk v;\n      return (w, [])\n    od ++\n    do\n      (f, n) <- dest_Recclosure v;\n      case ALOOKUP (REVERSE f) n of\n        SOME (Delay x) => return (x, f)\n      | _ => fail Type_error\n    od",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 169,
+    "type": "Definition"
+  },
+  {
+    "name": "dest_Constructor_def",
+    "statement": "dest_Constructor (Constructor s vs) = return (s, vs) ∧\n  dest_Constructor _ = fail Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 183,
+    "type": "Definition"
+  },
+  {
+    "name": "freevars_def",
+    "statement": "freevars (Var n) = {n} ∧\n  freevars (Prim op xs) = (BIGUNION (set (MAP freevars xs))) ∧\n  freevars (Monad mop xs) = (BIGUNION (set (MAP freevars xs))) ∧\n  freevars (If x y z) = freevars x ∪ freevars y ∪ freevars z ∧\n  freevars (App x y) = freevars x ∪ freevars y ∧\n  freevars (Lam s b) = freevars b DIFF {s} ∧\n  freevars (Let NONE x y) = freevars x ∪ freevars y ∧\n  freevars (Let (SOME s) x y) = freevars x ∪ (freevars y DIFF {s}) ∧\n  freevars (Letrec f x) =\n    ((freevars x ∪ BIGUNION (set (MAP (λ(n, x). freevars x) f))) DIFF\n     set (MAP FST f)) ∧\n  freevars (Delay x) = freevars x ∧\n  freevars (Force x) = freevars x ∧\n  freevars (Value v) = ∅ ∧\n  freevars (MkTick x) = freevars x\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 188,
+    "type": "Definition"
+  },
+  {
+    "name": "boundvars_def",
+    "statement": "boundvars (Var n) = {} ∧\n  boundvars (Prim op xs) = (BIGUNION (set (MAP boundvars xs))) ∧\n  boundvars (Monad mop xs) = (BIGUNION (set (MAP boundvars xs))) ∧\n  boundvars (If x y z) = boundvars x ∪ boundvars y ∪ boundvars z ∧\n  boundvars (App x y) = boundvars x ∪ boundvars y ∧\n  boundvars (Lam s b) = boundvars b ∪ {s} ∧\n  boundvars (Let NONE x y) = boundvars x ∪ boundvars y ∧\n  boundvars (Let (SOME s) x y) = boundvars x ∪ boundvars y ∪ {s} ∧\n  boundvars (Letrec f x) =\n    ((boundvars x ∪ BIGUNION (set (MAP (λ(n, x). boundvars x) f))) ∪\n     set (MAP FST f)) ∧\n  boundvars (Delay x) = boundvars x ∧\n  boundvars (Force x) = boundvars x ∧\n  boundvars (Value v) = ∅ ∧\n  boundvars (MkTick x) = boundvars x\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 212,
+    "type": "Definition"
+  },
+  {
+    "name": "closed_def",
+    "statement": "closed e ⇔ freevars e = ∅",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 236,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_to_def",
+    "statement": "eval_to k (Value v) = return v ∧\n  eval_to k (Var n) = fail Type_error ∧\n  eval_to k (App f x) =\n    (do\n       xv <- eval_to k x;\n       fv <- eval_to k f;\n       (s, body, binds) <- dest_anyClosure fv;\n       y <<- subst (binds ++ [(s, xv)]) body;\n       if k = 0 then fail Diverge else eval_to (k - 1) y\n     od) ∧\n  eval_to k (Lam s x) = return (Closure s x) ∧\n  eval_to k (Let NONE x y) =\n    (if k = 0 then fail Diverge else\n       do\n         eval_to (k - 1) x;\n         eval_to (k - 1) y\n       od) ∧\n  eval_to k (Let (SOME n) x y) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to (k - 1) x;\n         eval_to (k - 1) (subst1 n v y)\n       od) ∧\n  eval_to k (If x y z) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to (k - 1) x;\n         if v = Constructor \"True\" [] then\n           eval_to (k - 1) y\n         else if v = Constructor \"False\" [] then\n           eval_to (k - 1) z\n         else\n           fail Type_error\n       od) ∧\n  eval_to k (Letrec funs x) =\n    (if k = 0 then fail Diverge else\n       eval_to (k - 1) (subst_funs funs x)) ∧\n  eval_to k (Delay x) = return (Thunk x) ∧\n  eval_to k (Force x) =\n    (if k = 0 then fail Diverge else\n       do\n         v <- eval_to k x;\n         case dest_Tick v of\n           SOME w => eval_to (k - 1) (Force (Value w))\n         | NONE =>\n             do (y, binds) <- dest_anyThunk v;\n                eval_to (k - 1) (subst_funs binds y)\n             od\n       od) ∧\n  eval_to k (MkTick x) =\n    (do\n       v <- eval_to k x;\n       return (DoTick v)\n     od) ∧\n  eval_to k (Prim op xs) =\n    (case op of\n       Cons s =>\n           do\n             vs <- result_map (λx. eval_to k x) xs;\n             return (Constructor s vs)\n           od\n       | If => fail Type_error\n       | Seq => fail Type_error\n       | Proj s i =>\n           do\n             assert (LENGTH xs = 1);\n             v <- if k = 0 then fail Diverge else eval_to (k - 1) (HD xs);\n             (t, ys) <- dest_Constructor v;\n             assert (t = s ∧ i < LENGTH ys);\n             return (EL i ys)\n           od\n       | IsEq s i a =>\n           do\n             assert (LENGTH xs = 1);\n             v <- if k = 0 then fail Diverge else eval_to (k - 1) (HD xs);\n             (t, ys) <- dest_Constructor v;\n             assert ((t = s ⇒ i = LENGTH ys) ∧ t ∉ monad_cns);\n             return (Constructor (if t ≠ s then \"False\" else \"True\") [])\n           od\n       | AtomOp aop =>\n           do\n             ys <- result_map (λx. if k = 0 then fail Diverge else\n                                    case eval_to (k - 1) x of\n                                      INR (Atom l) => return l\n                                    | INL err => fail err\n                                    | _ => fail Type_error) xs;\n             case eval_op aop ys of\n               SOME (INL v) => return (Atom v)\n             | SOME (INR b) =>\n               return (Constructor (if b then \"True\" else \"False\") [])\n             | NONE => fail Type_error\n           od) ∧\n  eval_to k (Monad mop xs) = return (Monadic mop xs)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 240,
+    "type": "Definition"
+  },
+  {
+    "name": "eval_def",
+    "statement": "eval x =\n    case some k. eval_to k x ≠ INL Diverge of\n      NONE => fail Diverge\n    | SOME k => eval_to k x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 409,
+    "type": "Definition"
+  },
+  {
+    "name": "is_Lam_def",
+    "statement": "(is_Lam (Lam _ _) = T) ∧\n  (is_Lam _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 561,
+    "type": "Definition"
+  },
+  {
+    "name": "is_Delay_def",
+    "statement": "(is_Delay (Delay x) = T) ∧\n  (is_Delay _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 566,
+    "type": "Definition"
+  },
+  {
+    "name": "is_delay_def",
+    "statement": "is_delay (Delay x) = T ∧\n  is_delay _ = F",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 571,
+    "type": "Definition"
+  },
+  {
+    "name": "ok_bind_def",
+    "statement": "(ok_bind (Lam _ _) = T) ∧\n  (ok_bind (Delay _) = T) ∧\n  (ok_bind _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 576,
+    "type": "Definition"
+  },
+  {
+    "name": "ok_binder_def",
+    "statement": "ok_binder (Lam s x) = T ∧\n  ok_binder (Delay x) = T ∧\n  ok_binder _ = F",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLangScript.sml",
+    "line": 614,
+    "type": "Definition"
+  },
+  {
+    "name": "sum_bind_assoc",
+    "statement": "sum_bind (sum_bind m f) g = sum_bind m (λx. sum_bind (f x) g)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 38,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_MAP",
+    "statement": "map f (MAP g xs) = map (f o g) xs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 86,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_INL",
+    "statement": "map f xs = INL err ⇔\n    ∃n. n < LENGTH xs ∧\n        f (EL n xs) = INL err ∧\n        ∀m. m < n ⇒ ∀e. f (EL m xs) ≠ INL e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 92,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_INR",
+    "statement": "map f xs = INR ys ⇒\n    ∀n. n < LENGTH xs ⇒ f (EL n xs) = INR (EL n ys)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 145,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_LENGTH",
+    "statement": "∀xs ys.\n    map f xs = INR ys ⇒ LENGTH ys = LENGTH xs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 156,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_LIST_REL_mono",
+    "statement": "∀xs ys vs ws.\n    map f xs = INR vs ∧\n    map g ys = INR ws ∧\n    LIST_REL R xs ys ∧\n    LIST_REL (λx y. R x y ⇒ Q (OUTR (f x)) (OUTR (g y))) xs ys ⇒\n      LIST_REL Q vs ws",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 166,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_EQ_f",
+    "statement": "∀xs.\n    (∀x. MEM x xs ⇒ f x = g x) ⇒\n      map f xs = map g xs",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 184,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_single",
+    "statement": "(map f [x] = INR [v] ⇔ f x = INR v) ∧\n  (map f [x] = INL e ⇔ f x = INL e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 192,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_K_INL",
+    "statement": "xs ≠ [] ⇒ map (K (INL e)) xs = INL e",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 200,
+    "type": "Theorem"
+  },
+  {
+    "name": "map_CONG",
+    "statement": "∀xs ys f g.\n    xs = ys ∧\n    (∀x. MEM x xs ⇒ f x = g x) ⇒\n      map f xs = map g ys",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 206,
+    "type": "Theorem"
+  },
+  {
+    "name": "result_map_INR",
+    "statement": "result_map f xs = INR res ⇔ map f xs = INR res",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 218,
+    "type": "Theorem"
+  },
+  {
+    "name": "result_map_CONG",
+    "statement": "∀xs ys f g.\n    xs = ys ∧\n    (∀x. MEM x xs ⇒ f x = g x) ⇒\n      result_map f xs = result_map g ys",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 237,
+    "type": "Theorem"
+  },
+  {
+    "name": "sum_bind_def",
+    "statement": "sum_bind (INL e) f = INL e ∧\n  sum_bind (INR x) f = f x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 16,
+    "type": "Definition"
+  },
+  {
+    "name": "sum_ignore_bind_def",
+    "statement": "sum_ignore_bind m1 m2 = sum_bind m1 (λu. m2)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 21,
+    "type": "Definition"
+  },
+  {
+    "name": "sum_choice_def",
+    "statement": "sum_choice (INL v: 'a + 'b) (m2: 'a + 'b) = m2 ∧\n  sum_choice (INR x) m2 = INR x",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 25,
+    "type": "Definition"
+  },
+  {
+    "name": "return_def",
+    "statement": "return = INR",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 30,
+    "type": "Definition"
+  },
+  {
+    "name": "fail_def",
+    "statement": "fail = INL",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 34,
+    "type": "Definition"
+  },
+  {
+    "name": "assert_def",
+    "statement": "assert P = if P then INR () else INL Type_error",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 57,
+    "type": "Definition"
+  },
+  {
+    "name": "map_def",
+    "statement": "map f [] = return [] ∧\n  map f (x::xs) =\n    do\n      y <- f x;\n      ys <- map f xs;\n      return (y::ys)\n    od",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 61,
+    "type": "Definition"
+  },
+  {
+    "name": "result_map_def",
+    "statement": "result_map f xs =\n    let ys = MAP f xs in\n      if MEM (INL Type_error) ys then INL Type_error\n      else if MEM (INL Diverge) ys then INL Diverge\n      else INR (MAP OUTR ys)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 71,
+    "type": "Definition"
+  },
+  {
+    "name": "can_def",
+    "statement": "can f x =\n    case f x of\n      INL _ => F\n    | INR _ => T",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunkLang_primitivesScript.sml",
+    "line": 79,
+    "type": "Definition"
+  },
+  {
+    "name": "lets_for_APPEND",
+    "statement": "lets_for l m n (l1 ++ l2) e = lets_for l m n l1 (lets_for l m n l2 e)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 105,
+    "type": "Theorem"
+  },
+  {
+    "name": "lets_for_def",
+    "statement": "lets_for l cn v [] b = (b:thunkLang$exp) ∧\n  lets_for l cn v ((n,w)::ws) b =\n    Seq (If (IsEq cn l T (Var v)) Unit Fail) $\n      Let (SOME w) (Proj cn n (Var v)) $\n        lets_for l cn v ws b",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 14,
+    "type": "Definition"
+  },
+  {
+    "name": "Disj_def",
+    "statement": "Disj v [] = False ∧\n  Disj v ((cn,l)::xs) = If (IsEq cn l T (Var v)) True (Disj v xs)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 25,
+    "type": "Definition"
+  },
+  {
+    "name": "rows_of_def",
+    "statement": "rows_of v [] k =\n    (case k of\n     | NONE => Prim (AtomOp Add) []\n     | SOME (alts,e) => If (Disj v alts) e Fail) ∧\n  rows_of v ((cn,vs,b)::rest) k =\n    If (IsEq cn (LENGTH vs) T (Var v))\n      (lets_for (LENGTH vs) cn v (MAPi (λi v. (i,v)) vs) b) (rows_of v rest k)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 30,
+    "type": "Definition"
+  },
+  {
+    "name": "op_of_def",
+    "statement": "op_of (Cons m) = Cons (explode m) ∧\n  op_of (AtomOp a) = AtomOp a",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 40,
+    "type": "Definition"
+  },
+  {
+    "name": "exp_of_def",
+    "statement": "exp_of (Var n)         = Var (explode n):thunkLang$exp ∧\n  exp_of (Prim p xs)     = Prim (op_of p) (MAP exp_of xs) ∧\n  exp_of (Monad mop xs)  = Monad mop (MAP exp_of xs) ∧\n  exp_of (Let w x y)     = Let (OPTION_MAP explode w) (exp_of x) (exp_of y) ∧\n  exp_of (App f xs)      = Apps (exp_of f) (MAP exp_of xs) ∧\n  exp_of (Lam vs x)      = Lams (MAP explode vs) (exp_of x) ∧\n  exp_of (Letrec rs x)   = Letrec (MAP (λ(n,x). (explode n,exp_of x)) rs) (exp_of x) ∧\n  exp_of (Case v rs d) =\n      rows_of\n        (explode v)\n        (MAP (λ(c,vs,x). (explode c,MAP explode vs,exp_of x)) rs)\n        (OPTION_MAP (λ(a,e). (MAP (explode ## I) a, exp_of e)) d) ∧\n  exp_of (Force x)       = Force (exp_of x) ∧\n  exp_of (Delay x)       = Delay (exp_of x)\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 45,
+    "type": "Definition"
+  },
+  {
+    "name": "args_ok_def",
+    "statement": "args_ok (thunk_cexp$AtomOp aop) es =\n    (num_atomop_args_ok aop (LENGTH es) ∧\n     (∀m. aop = Message m ⇒ m ≠ \"\") ∧\n     ∀s1 s2. aop ≠ Lit (Msg s1 s2) ∧ ∀l. aop ≠ Lit (Loc l)) ∧\n  args_ok _ _ = T",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 64,
+    "type": "Definition"
+  },
+  {
+    "name": "cexp_ok_bind_def",
+    "statement": "(cexp_ok_bind (Delay _ : cexp) = T) ∧\n  (cexp_ok_bind (Lam _ _) = T) ∧\n  (cexp_ok_bind _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 72,
+    "type": "Definition"
+  },
+  {
+    "name": "cexp_wf_def",
+    "statement": "cexp_wf (Var v) = T ∧\n  cexp_wf (Prim op es) = (args_ok op es ∧ EVERY cexp_wf es) ∧\n  cexp_wf (Monad mop es) = (num_mop_args mop = LENGTH es ∧ EVERY cexp_wf es) ∧\n  cexp_wf (App e es) = (cexp_wf e ∧ EVERY cexp_wf es ∧ es ≠ []) ∧\n  cexp_wf (Force e) = cexp_wf e ∧\n  cexp_wf (Delay e) = cexp_wf e ∧\n  cexp_wf (Lam vs e) = (cexp_wf e ∧ vs ≠ []) ∧\n  cexp_wf (Let v e1 e2) = (cexp_wf e1 ∧ cexp_wf e2) ∧\n  cexp_wf (Letrec fns e) = (EVERY (λ(_,x). cexp_ok_bind x ∧ cexp_wf x) fns ∧ cexp_wf e\n                            ∧ fns ≠ [] ∧ ALL_DISTINCT (MAP FST fns)) ∧\n  cexp_wf (Case v css eopt) = (\n    EVERY (λ(_,vs,x). ALL_DISTINCT vs ∧ cexp_wf x) css ∧\n    css ≠ [] ∧\n    ¬ MEM v (FLAT $ MAP (FST o SND) css) ∧\n    ALL_DISTINCT (MAP FST css ++ case eopt of NONE => [] | SOME (a,_) => MAP FST a) ∧\n    OPTION_ALL (λ(a,e). a ≠ [] ∧ cexp_wf e ∧ EVERY (λ(cn,_). explode cn ∉ monad_cns) a) eopt ∧\n    (∀cn. MEM cn (MAP FST css) ⇒ explode cn ∉ monad_cns))\n",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 78,
+    "type": "Definition"
+  },
+  {
+    "name": "is_Delay_def",
+    "statement": "(is_Delay (Delay _ : cexp) = T) ∧\n  (is_Delay _ = F)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_exp_ofScript.sml",
+    "line": 100,
+    "type": "Definition"
+  },
+  {
+    "name": "interp_def",
+    "statement": "interp sv stack state =\n    case next_action sv stack state of\n    | Ret => Ret pure_semantics$Termination\n    | Div => Div\n    | Err => Ret pure_semantics$Error\n    | Act a new_stack new_state =>\n        Vis a (λs. case s of\n          | INL x =>\n              Ret $ pure_semantics$FinalFFI a x\n          | INR y =>\n              if STRLEN y ≤ max_FFI_return_size then\n                interp (INR $ Monadic Ret [Lit (Str y)])\n                       new_stack\n                       new_state\n              else Ret $ pure_semantics$FinalFFI a pure_semantics$FFI_failure)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 196,
+    "type": "Theorem"
+  },
+  {
+    "name": "next_less_eq",
+    "statement": "∀n e k st m.\n    next n e k st ≠ Div ∧\n    n ≤ m\n  ⇒ next n e k st = next m e k st",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 231,
+    "type": "Theorem"
+  },
+  {
+    "name": "next_next",
+    "statement": "next n e k st ≠ Div ∧ next m e k st ≠ Div ⇒\n  next n e k st = next m e k st",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 282,
+    "type": "Theorem"
+  },
+  {
+    "name": "get_atoms_def",
+    "statement": "get_atoms [] = SOME [] ∧\n  get_atoms (Atom a :: xs) = OPTION_MAP (λas. a::as) (get_atoms xs) ∧\n  get_atoms _ = NONE",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 27,
+    "type": "Definition"
+  },
+  {
+    "name": "with_atoms_def",
+    "statement": "with_atoms vs f =\n    case result_map eval vs of\n    | INL Diverge => Div\n    | INL Type_error => Err\n    | INR ws =>\n      case get_atoms ws of\n      | SOME as => f as\n      | NONE => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 33,
+    "type": "Definition"
+  },
+  {
+    "name": "with_value_def",
+    "statement": "with_value e f =\n    case eval e of\n    | INR v => f v\n    | INL Diverge => Div\n    | INL _ => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 44,
+    "type": "Definition"
+  },
+  {
+    "name": "apply_closure_def",
+    "statement": "apply_closure f arg cont =\n    with_value f (λv.\n      case dest_anyClosure v of\n      | INR (x, body, binds) =>\n          cont (eval (subst (binds ++ [x, arg]) body))\n      | INL _ => Err)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 52,
+    "type": "Definition"
+  },
+  {
+    "name": "next_def",
+    "statement": "next (k:num) sv stack (state:state) =\n    case sv of\n    | INL Diverge => Div\n    | INL _ => Err\n    | INR v =>\n      case v of\n      | Monadic mop vs => (\n          if mop = Ret ∧ LENGTH vs = 1 then\n            with_value (HD vs) (λv.\n              case stack of\n              | Done => Ret\n              | BC f fs =>\n                  \n\n\n                  if k = 0 then Div else\n                    apply_closure f v (λw. next (k-1) w fs state)\n              | HC f fs => if k = 0 then Div else next (k-1) sv fs state)\n          else if mop = Raise ∧ LENGTH vs = 1 then\n            with_value (HD vs) (λv.\n              case stack of\n              | Done => Ret\n              | BC f fs => if k = 0 then Div else next (k-1) sv fs state\n              | HC f fs =>\n                  if k = 0 then Div else\n                  apply_closure f v (λw. next (k-1) w fs state))\n          else if mop = Bind ∧ LENGTH vs = 2 then\n            (let m = EL 0 vs in\n             let f = EL 1 vs in\n               if k = 0 then Div else next (k-1) (eval m) (BC f stack) state)\n          else if mop = Handle ∧ LENGTH vs = 2 then\n            (let m = EL 0 vs in\n             let f = EL 1 vs in\n               if k = 0 then Div else next (k-1) (eval m) (HC f stack) state)\n          else if mop = Act ∧ LENGTH vs = 1 then\n            (with_atoms vs (λas.\n               case HD as of\n               | Msg channel content => Act (channel, content) stack state\n               | _ => Err))\n          else if mop = Alloc ∧ LENGTH vs = 2 then\n            (case result_map eval vs of\n             | INR [vl; v] =>\n                (case get_atoms [vl] of\n                 | SOME [Int len] =>\n                    let n = if len < 0 then 0 else Num len in\n                    let new_state = state ++ [REPLICATE n v] in\n                    if k = 0 then Div else\n                      next (k-1)\n                        (INR $ Monadic Ret [Lit (Loc (LENGTH state))])\n                        stack new_state\n                 | _ => Err)\n             | INL Diverge => Div\n             | _ => Err)\n          else if mop = Length ∧ LENGTH vs = 1 then\n            (with_atoms vs (λas.\n               case HD as of\n               | Loc n =>\n                   (if LENGTH state ≤ n then Err else\n                    if k = 0 then Div else\n                      next (k-1)\n                        (INR $ Monadic Ret [Lit (Int (& (LENGTH (EL n state))))])\n                        stack state)\n               | _ => Err))\n          else if mop = Deref ∧ LENGTH vs = 2 then\n            (with_atoms vs (λas.\n               case (EL 0 as, EL 1 as) of\n               | (Loc n, Int i) =>\n                   (if LENGTH state ≤ n then Err else\n                    if k = 0 then Div else\n                    if 0 ≤ i ∧ i < & LENGTH (EL n state) then\n                      next (k-1)\n                        (INR $ Monadic Ret [Value $ EL (Num i) (EL n state)])\n                        stack state\n                    else\n                      next (k-1)\n                        (INR $ Monadic Raise [Cons \"Subscript\" []])\n                        stack state)\n               | _ => Err))\n          else if mop = Update ∧ LENGTH vs = 3 then\n            (case result_map eval vs of\n             | INR [vl; vi; v] =>\n                 (case get_atoms [vl; vi] of\n                  | SOME [Loc n; Int i] =>\n                      if LENGTH state ≤ n then Err else\n                      if k = 0 then Div else\n                      if 0 ≤ i ∧ i < & LENGTH (EL n state) then\n                        let new_state =\n                          LUPDATE (LUPDATE v (Num i) (EL n state)) n state\n                        in next (k-1) (INR $ Monadic Ret [Cons \"\" []]) stack new_state\n                      else\n                        next (k-1)\n                          (INR $ Monadic Raise [Cons \"Subscript\" []])\n                          stack state\n                  | _ => Err)\n             | INL Diverge => Div\n             | _ => Err)\n          else Err)\n      | _ => Err",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 64,
+    "type": "Definition"
+  },
+  {
+    "name": "next_action_def",
+    "statement": "next_action sv stack state =\n    case some k. next k sv stack state ≠ Div of\n    | NONE => Div\n    | SOME k => next k sv stack state",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 165,
+    "type": "Definition"
+  },
+  {
+    "name": "interp'_def",
+    "statement": "interp' =\n    itree_unfold_err\n      (λ(sv,stack,state).\n        case next_action sv stack state of\n        | Ret => Ret' pure_semantics$",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 172,
+    "type": "Definition"
+  },
+  {
+    "name": "interp",
+    "statement": "interp sv stack state = interp' (sv, stack, state)",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 192,
+    "type": "Definition"
+  },
+  {
+    "name": "semantics_def",
+    "statement": "semantics e stack state = interp (eval e) stack state",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 220,
+    "type": "Definition"
+  },
+  {
+    "name": "itree_of_def",
+    "statement": "itree_of e = semantics e Done []",
+    "file": "/home/nikos-alexandris/Repositories/forks/pure/compiler/backend/languages/semantics/thunk_semanticsScript.sml",
+    "line": 224,
+    "type": "Definition"
+  }
+]
